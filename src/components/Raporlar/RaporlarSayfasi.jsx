@@ -294,30 +294,31 @@ export default function RaporlarSayfasi({ sezon }) {
                 )
               })}
 
-              {/* Genel Toplam */}
+              {/* Genel Toplam Kutusu */}
               {(() => {
-                const genelVerilen = kisiler.reduce((t, k) => {
-                  return t + hareketler.filter(h => h.kisi_id === k.id && h.yon === 'gider').reduce((s, h) => s + (h.tutar || 0), 0)
-                }, 0)
-                const genelAlinan = kisiler.reduce((t, k) => {
-                  return t + hareketler.filter(h => h.kisi_id === k.id && h.yon === 'gelir').reduce((s, h) => s + (h.tutar || 0), 0)
-                }, 0)
+                const tumKisiHareketler = hareketler.filter(h => kisiler.some(k => k.id === h.kisi_id))
+                const genelVerilen = tumKisiHareketler.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+                const genelAlinan = tumKisiHareketler.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
                 const genelKalan = genelAlinan - genelVerilen
                 return (
-                  <div style={{ background: '#0F6E56', borderRadius: 12, padding: 16, marginBottom: 12 }}>
-                    <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
-                      📊 Tüm Kişiler Genel Toplam
+                  <div style={{ background: '#0F6E56', borderRadius: 12, padding: 20, marginBottom: 12 }}>
+                    <div style={{ color: '#fff', fontSize: 14, fontWeight: 800, marginBottom: 14 }}>
+                      📊 Tüm Kişiler — Genel Toplam
                     </div>
-                    {[
-                      { label: 'Toplam Verilen', tutar: genelVerilen, renk: '#FCA5A5' },
-                      { label: 'Toplam Alınan', tutar: genelAlinan, renk: '#86EFAC' },
-                      { label: 'Net Kalan', tutar: Math.abs(genelKalan), renk: '#fff', prefix: genelKalan >= 0 ? '(Bende) ' : '(Onda) ' },
-                    ].map(r => (
-                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 7, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-                        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>{r.label}</span>
-                        <span style={{ color: r.renk, fontWeight: 800, fontSize: 14 }}>{r.prefix || ''}{paraBiçim(r.tutar)}</span>
-                      </div>
-                    ))}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Toplam Verilen</span>
+                      <span style={{ color: '#FCA5A5', fontWeight: 800, fontSize: 15 }}>{paraBiçim(genelVerilen)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
+                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Toplam Alınan</span>
+                      <span style={{ color: '#86EFAC', fontWeight: 800, fontSize: 15 }}>{paraBiçim(genelAlinan)}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8 }}>
+                      <span style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>Net Kalan</span>
+                      <span style={{ color: '#fff', fontWeight: 900, fontSize: 16 }}>
+                        {genelKalan >= 0 ? '(Bende) ' : '(Onda) '}{paraBiçim(Math.abs(genelKalan))}
+                      </span>
+                    </div>
                   </div>
                 )
               })()}
