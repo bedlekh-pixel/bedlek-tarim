@@ -1,6 +1,6 @@
 export default function Sidebar({ aktifSayfa, setSayfa }) {
   const navItems = [
-    { id: 'ozet', label: 'Özet', ikon: '📊' },
+    { id: 'ozet', label: 'Anasayfa', ikon: '🏠' },
     { id: 'sozlesmeli', label: 'Sözleşmeli', ikon: '🏢' },
     { id: 'sahsi', label: 'Şahsi', ikon: '💰' },
     { id: 'tarlalar', label: 'Tarlalar', ikon: '🌾' },

@@ -67,6 +67,7 @@ const VARSAYILAN_KALEMLER = [
   { id: 'dron', ad: 'Dron İlaçlama', ikon: '🚁', sabit: false, renk: '#185FA5' },
   { id: 'kepce', ad: 'Kepçe/İş Makinası', ikon: '🏗️', sabit: false, renk: '#92400E' },
   { id: 'traktör', ad: 'Traktör', ikon: '🚜', sabit: false, renk: '#374151' },
+  { id: 'tarla_kirasi', ad: 'Tarla Kirası', ikon: '🏡', sabit: false, renk: '#B45309' },
 ]
 
 const VARSAYILAN_SEZON = {
