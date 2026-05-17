@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { kisileriOku, kisiEkle, kisiSil, kisiDuzenle, hareketleriOku, hareketEkle } from '../../store/db'
+import { kisileriOku, kisiEkle, kisiSil, kisiDuzenle, hareketleriOku, hareketEkle, hareketDuzenle, hareketSil } from '../../store/db'
 import { paraBiçim, tarihBiçim, bugun } from '../../utils/format'
 import Modal from '../../utils/Modal'
 import Onayla from '../../utils/Onayla'
@@ -96,20 +96,77 @@ function BorcAlacakForm({ kisi, sezon, onKapat, onKaydet }) {
   )
 }
 
+function HareketDuzenleForm({ hareket, onKapat, onKaydet }) {
+  const [form, setForm] = useState({
+    yon: hareket.yon,
+    tutar: hareket.tutar || '',
+    aciklama: hareket.aciklama || '',
+    tarih: hareket.tarih || bugun(),
+  })
+  function f(alan, v) { setForm(p => ({ ...p, [alan]: v })) }
+  function kaydet() {
+    if (!form.tutar) return
+    hareketDuzenle(hareket.id, {
+      yon: form.yon,
+      tutar: parseFloat(form.tutar),
+      aciklama: form.aciklama,
+      tarih: form.tarih,
+      kalem: form.yon === 'gider' ? 'Borç (Verilen)' : 'Alacak (Alınan)',
+    })
+    onKaydet()
+  }
+  const inp = { width: '100%', padding: '11px 13px', border: '1.5px solid var(--kenar)', borderRadius: 10, fontSize: 15, background: '#fff', boxSizing: 'border-box' }
+  return (
+    <Modal onKapat={onKapat} genislik={400}>
+      <div style={{ padding: '20px 20px 24px' }}>
+        <div style={{ fontWeight: 700, fontSize: 16, marginBottom: 16 }}>✏️ Hareketi Düzenle</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => f('yon', 'gider')} style={{
+              flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid', cursor: 'pointer', fontWeight: 700,
+              background: form.yon === 'gider' ? 'var(--kirmizi)' : '#fff',
+              borderColor: form.yon === 'gider' ? 'var(--kirmizi)' : 'var(--kenar)',
+              color: form.yon === 'gider' ? '#fff' : 'var(--yazi)',
+            }}>Verdim (Borç)</button>
+            <button onClick={() => f('yon', 'gelir')} style={{
+              flex: 1, padding: '11px', borderRadius: 10, border: '1.5px solid', cursor: 'pointer', fontWeight: 700,
+              background: form.yon === 'gelir' ? 'var(--yesil)' : '#fff',
+              borderColor: form.yon === 'gelir' ? 'var(--yesil)' : 'var(--kenar)',
+              color: form.yon === 'gelir' ? '#fff' : 'var(--yazi)',
+            }}>Aldım (Alacak)</button>
+          </div>
+          <input type="number" inputMode="numeric" value={form.tutar} onChange={e => f('tutar', e.target.value)} placeholder="Tutar (TL)" style={inp} />
+          <input value={form.aciklama} onChange={e => f('aciklama', e.target.value)} placeholder="Açıklama" style={inp} />
+          <input type="date" value={form.tarih} onChange={e => f('tarih', e.target.value)} style={inp} />
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={onKapat} style={{ flex: 1, padding: '12px', background: '#f3f4f6', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600 }}>İptal</button>
+            <button onClick={kaydet} style={{ flex: 2, padding: '12px', background: 'var(--yesil)', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700 }}>Kaydet</button>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 function KisiDetay({ kisi: ilkKisi, sezon, onKapat, onSilindi }) {
   const [kisi, setKisi] = useState(ilkKisi)
   const [duzenleAcik, setDuzenleAcik] = useState(false)
   const [borcFormAcik, setBorcFormAcik] = useState(false)
   const [silOnay, setSilOnay] = useState(false)
+  const [duzenleHareket, setDuzenleHareket] = useState(null)
+  const [silHareket, setSilHareket] = useState(null)
   const tur = KISI_TURLERI.find(t => t.id === kisi.tur)
-  const hareketler = hareketleriOku(sezon?.id).filter(h => h.kisi_id === kisi.id)
   const toplamGelir = hareketler.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
   const toplamGider = hareketler.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
   const net = toplamGelir - toplamGider
 
+  const [hareketYenile, setHareketYenile] = useState(0)
+  const hareketler = hareketleriOku(sezon?.id).filter(h => h.kisi_id === kisi.id)
+
   function yenile() {
     const guncel = kisileriOku().find(k => k.id === kisi.id)
     if (guncel) setKisi(guncel)
+    setHareketYenile(n => n + 1)
   }
 
   return (
@@ -167,14 +224,20 @@ function KisiDetay({ kisi: ilkKisi, sezon, onKapat, onSilindi }) {
             <div style={{ color: 'var(--yazi-hafif)', textAlign: 'center', padding: '20px 0' }}>Henüz kayıt yok</div>
           ) : (
             [...hareketler].sort((a, b) => new Date(b.tarih) - new Date(a.tarih)).map(h => (
-              <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', paddingBlock: 10, borderBottom: '1px solid var(--kenar)' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600 }}>{h.kalem || h.tur}</div>
-                  {h.aciklama && <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginTop: 2 }}>{h.aciklama}</div>}
-                  <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginTop: 1 }}>{tarihBiçim(h.tarih)}</div>
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
-                  {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
+              <div key={h.id} style={{ paddingBlock: 10, borderBottom: '1px solid var(--kenar)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{h.kalem || h.tur}</div>
+                    {h.aciklama && <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginTop: 2 }}>{h.aciklama}</div>}
+                    <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginTop: 1 }}>{tarihBiçim(h.tarih)}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                      {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
+                    </div>
+                    <button onClick={() => setDuzenleHareket(h)} style={{ background: '#F0F7F4', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 13 }}>✏️</button>
+                    <button onClick={() => setSilHareket(h)} style={{ background: '#FEF2F2', border: 'none', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', fontSize: 13 }}>🗑️</button>
+                  </div>
                 </div>
               </div>
             ))
@@ -185,6 +248,20 @@ function KisiDetay({ kisi: ilkKisi, sezon, onKapat, onSilindi }) {
       {duzenleAcik && <KisiForm duzenlenen={kisi} onKapat={() => setDuzenleAcik(false)} onKaydet={() => { setDuzenleAcik(false); yenile() }} />}
       {borcFormAcik && <BorcAlacakForm kisi={kisi} sezon={sezon} onKapat={() => setBorcFormAcik(false)} onKaydet={() => setBorcFormAcik(false)} />}
       {silOnay && <Onayla mesaj={`"${kisi.ad}" silinsin mi?`} onEvet={() => { kisiSil(kisi.id); onSilindi() }} onHayir={() => setSilOnay(false)} />}
+      {duzenleHareket && (
+        <HareketDuzenleForm
+          hareket={duzenleHareket}
+          onKapat={() => setDuzenleHareket(null)}
+          onKaydet={() => { setDuzenleHareket(null); yenile() }}
+        />
+      )}
+      {silHareket && (
+        <Onayla
+          mesaj={`Bu hareket silinsin mi? (${paraBiçim(silHareket.tutar)})`}
+          onEvet={() => { hareketSil(silHareket.id); setSilHareket(null); yenile() }}
+          onHayir={() => setSilHareket(null)}
+        />
+      )}
     </div>
   )
 }
