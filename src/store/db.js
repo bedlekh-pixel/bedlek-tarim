@@ -47,7 +47,7 @@ async function buluttanOku(key) {
       .from('store')
       .select('value')
       .eq('key', key)
-      .single()
+      .maybeSingle()
     return data?.value ?? null
   } catch {
     return null
