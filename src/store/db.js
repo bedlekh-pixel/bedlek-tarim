@@ -90,6 +90,15 @@ export function dbInit() {
   if (!oku(KEYS.ayarlar)) yaz(KEYS.ayarlar, { aktifSezon: VARSAYILAN_SEZON.id })
   if (!oku(KEYS.isci_gruplari)) yaz(KEYS.isci_gruplari, [])
   if (!oku(KEYS.iscilik_kayitlari)) yaz(KEYS.iscilik_kayitlari, [])
+
+  // Yeni kalemler varsa mevcut listeye ekle
+  const mevcutKalemler = oku(KEYS.kalemler) || []
+  const eksikKalemler = VARSAYILAN_KALEMLER.filter(
+    vk => !mevcutKalemler.find(mk => mk.id === vk.id)
+  )
+  if (eksikKalemler.length > 0) {
+    yaz(KEYS.kalemler, [...mevcutKalemler, ...eksikKalemler])
+  }
 }
 
 // Buluttan çek, localStorage'ı güncelle

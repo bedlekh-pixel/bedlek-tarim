@@ -396,6 +396,15 @@ export default function OzetSayfasi({ sezon, setSayfa }) {
   const [odemeAcik, setOdemeAcik] = useState(false)
   const [hammaddeAcik, setHammaddeAcik] = useState(false)
   const [yenile, setYenile] = useState(0)
+  const [ozGizli, setOzGizli] = useState(() =>
+    localStorage.getItem('bt_ozet_gizli') === 'true'
+  )
+
+  const ozGizliToggle = () => {
+    const yeni = !ozGizli
+    setOzGizli(yeni)
+    localStorage.setItem('bt_ozet_gizli', yeni)
+  }
 
   const ozet = sezonOzeti(sezon?.id)
   const hareketler = hareketleriOku(sezon?.id)
@@ -421,22 +430,36 @@ export default function OzetSayfasi({ sezon, setSayfa }) {
       {/* Hava Durumu */}
       <HavaDurumu />
 
-      {/* Stat Kartları */}
-      <div className="grid-3" style={{ marginBottom: 16 }}>
-        <div style={{ background: 'var(--yesil-acik)', borderRadius: 14, padding: '16px 18px' }}>
-          <div style={{ fontSize: 11, color: 'var(--yesil)', fontWeight: 700, marginBottom: 4 }}>💚 Toplam Gelir</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--yesil)' }}>{paraBiçim(ozet.toplamGelir)}</div>
-        </div>
-        <div style={{ background: 'var(--kirmizi-acik)', borderRadius: 14, padding: '16px 18px' }}>
-          <div style={{ fontSize: 11, color: 'var(--kirmizi)', fontWeight: 700, marginBottom: 4 }}>🔴 Toplam Gider</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--kirmizi)' }}>{paraBiçim(ozet.toplamGider)}</div>
-        </div>
-        <div style={{ background: ozet.net >= 0 ? 'var(--yesil)' : 'var(--kirmizi)', borderRadius: 14, padding: '16px 18px' }}>
-          <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, marginBottom: 4 }}>📊 Net</div>
-          <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
-            {ozet.net >= 0 ? '+' : ''}{paraBiçim(ozet.net)}
+      {/* Stat Kartları — gizlenebilir */}
+      <div style={{ marginBottom: 16 }}>
+        <button onClick={ozGizliToggle} style={{
+          width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          background: '#fff', border: '1.5px solid var(--kenar)', borderRadius: 12,
+          padding: '10px 16px', cursor: 'pointer', marginBottom: ozGizli ? 0 : 10,
+          fontSize: 13, fontWeight: 700, color: 'var(--yazi)',
+        }}>
+          <span>💰 Finansal Özet</span>
+          <span style={{ fontSize: 16 }}>{ozGizli ? '👁️' : '🙈'}</span>
+        </button>
+
+        {!ozGizli && (
+          <div className="grid-3">
+            <div style={{ background: 'var(--yesil-acik)', borderRadius: 14, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: 'var(--yesil)', fontWeight: 700, marginBottom: 4 }}>💚 Toplam Gelir</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--yesil)' }}>{paraBiçim(ozet.toplamGelir)}</div>
+            </div>
+            <div style={{ background: 'var(--kirmizi-acik)', borderRadius: 14, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: 'var(--kirmizi)', fontWeight: 700, marginBottom: 4 }}>🔴 Toplam Gider</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: 'var(--kirmizi)' }}>{paraBiçim(ozet.toplamGider)}</div>
+            </div>
+            <div style={{ background: ozet.net >= 0 ? 'var(--yesil)' : 'var(--kirmizi)', borderRadius: 14, padding: '16px 18px' }}>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 700, marginBottom: 4 }}>📊 Net</div>
+              <div style={{ fontSize: 20, fontWeight: 900, color: '#fff' }}>
+                {ozet.net >= 0 ? '+' : ''}{paraBiçim(ozet.net)}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Hızlı Eylemler */}
