@@ -122,8 +122,12 @@ function HizliOdemeModal({ sezon, onKapat, onKaydet }) {
     background: '#fff', outline: 'none',
   }
 
+  const [hata, setHata] = useState('')
+
   const kaydet = () => {
-    if (!form.kalem || !form.tutar) return
+    if (!form.tutar) { setHata('Tutar giriniz'); return }
+    if (!form.kalem) { setHata('Kalem seçiniz'); return }
+    setHata('')
     const kisi = kisiler.find(k => k.id === form.kisi_id)
     const tarla = tarlalar.find(t => t.id === form.tarla_id)
     const firma = firmalar.find(f2 => f2.id === form.firma_id)
@@ -140,6 +144,7 @@ function HizliOdemeModal({ sezon, onKapat, onKaydet }) {
       kaynak: form.kaynak,
       firma_id: form.kaynak === 'avans' ? form.firma_id : '',
       tarla_id: form.tarla_id,
+      kisi_id: form.kisi_id,
       aciklama,
       sezon: sezon?.id,
     })
@@ -227,12 +232,13 @@ function HizliOdemeModal({ sezon, onKapat, onKaydet }) {
             placeholder="Ödeme açıklaması" style={inputStil} />
         </div>
 
+        {hata && <div style={{ color: 'var(--kirmizi)', fontSize: 13, marginBottom: 10, fontWeight: 600 }}>⚠️ {hata}</div>}
         <button onClick={kaydet} style={{
           width: '100%', padding: '14px', background: 'var(--yesil)',
           color: '#fff', border: 'none', borderRadius: 12,
           fontSize: 15, fontWeight: 800, cursor: 'pointer',
         }}>
-          ✅ Kaydет
+          ✅ Kaydet
         </button>
       </div>
     </div>
