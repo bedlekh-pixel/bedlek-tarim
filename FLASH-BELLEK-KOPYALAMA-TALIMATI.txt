@@ -1,0 +1,26 @@
+BEDLEK TARIM — Flash Bellek Kopyalama Talimatı
+==============================================
+
+Flash belleğe şu klasör ve dosyaları kopyalayın:
+
+✓ dist/                    (zorunlu - uygulama dosyaları)
+✓ src/                     (zorunlu)
+✓ package.json             (zorunlu)
+✓ package-lock.json        (zorunlu)
+✓ vite.config.js           (zorunlu)
+✓ index.html               (zorunlu)
+✓ BEDLEK-TARIM-KUR-ve-AC.bat  (açma dosyası)
+
+✗ node_modules/            (KOPYALAMAYA GEREK YOK - otomatik kurulur)
+✗ .git/                    (gerekmez)
+
+---
+
+Diğer bilgisayarda açmak için:
+1. Flash belleği takın
+2. "BEDLEK-TARIM-KUR-ve-AC.bat" dosyasına çift tıklayın
+3. İlk açılışta kurulum yapılır (1-2 dakika)
+4. Sonraki açılışlarda direkt açılır
+
+NOT: Diğer bilgisayarda Node.js kurulu olmalı.
+Node.js indirme: https://nodejs.org (LTS sürümü)

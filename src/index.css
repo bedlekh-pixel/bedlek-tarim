@@ -1,0 +1,99 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --yesil: #0F6E56;
+    --yesil-acik: #E8F5F1;
+    --kirmizi: #A32D2D;
+    --kirmizi-acik: #FDEAEA;
+    --amber: #854F0B;
+    --amber-acik: #FEF3CD;
+    --mavi: #185FA5;
+    --mavi-acik: #E8F1FB;
+    --mor: #534AB7;
+    --mor-acik: #EEEDFA;
+    --zemin: #F5F3EE;
+    --kart: #FFFFFF;
+    --yazi: #1A1A1A;
+    --yazi-hafif: #6B7280;
+    --kenar: #E5E1D8;
+    --p: 16px;
+  }
+
+  @media (min-width: 1024px) {
+    :root { --p: 28px; }
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--zemin);
+    color: var(--yazi);
+    font-family: 'Nunito', 'Segoe UI', sans-serif;
+    min-height: 100dvh;
+    overscroll-behavior: none;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100dvh;
+  }
+
+  input, select, textarea, button { font-family: inherit; }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+  }
+
+  h1, h2, h3 { margin: 0; }
+}
+
+/* Sayfa içi responsive padding */
+.sayfa {
+  padding: var(--p);
+}
+
+/* Desktop grid yardımcıları */
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .grid-2 {
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .grid-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  .desktop-iki-kolon {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  .desktop-ozet-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+}
