@@ -294,21 +294,34 @@ export default function RaporlarSayfasi({ sezon }) {
                 )
               })}
 
-              {/* Hareketi olmayan kişiler */}
-              <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--yazi-hafif)' }}>Hareketsiz Kişiler</div>
-                {kisiler.filter(k => hareketler.filter(h => h.kisi_id === k.id).length === 0).map((k, i) => (
-                  <div key={k.id} style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    paddingBlock: 8, borderBottom: i < kisiler.length - 1 ? '1px solid var(--kenar)' : 'none',
-                  }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{k.ad}</div>
-                      <div style={{ fontSize: 12, color: 'var(--yazi-hafif)' }}>{k.rol || ''} {k.telefon ? `· ${k.telefon}` : ''}</div>
+              {/* Genel Toplam */}
+              {(() => {
+                const genelVerilen = kisiler.reduce((t, k) => {
+                  return t + hareketler.filter(h => h.kisi_id === k.id && h.yon === 'gider').reduce((s, h) => s + (h.tutar || 0), 0)
+                }, 0)
+                const genelAlinan = kisiler.reduce((t, k) => {
+                  return t + hareketler.filter(h => h.kisi_id === k.id && h.yon === 'gelir').reduce((s, h) => s + (h.tutar || 0), 0)
+                }, 0)
+                const genelKalan = genelAlinan - genelVerilen
+                return (
+                  <div style={{ background: '#0F6E56', borderRadius: 12, padding: 16, marginBottom: 12 }}>
+                    <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
+                      📊 Tüm Kişiler Genel Toplam
                     </div>
+                    {[
+                      { label: 'Toplam Verilen', tutar: genelVerilen, renk: '#FCA5A5' },
+                      { label: 'Toplam Alınan', tutar: genelAlinan, renk: '#86EFAC' },
+                      { label: 'Net Kalan', tutar: Math.abs(genelKalan), renk: '#fff', prefix: genelKalan >= 0 ? '(Bende) ' : '(Onda) ' },
+                    ].map(r => (
+                      <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 7, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                        <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>{r.label}</span>
+                        <span style={{ color: r.renk, fontWeight: 800, fontSize: 14 }}>{r.prefix || ''}{paraBiçim(r.tutar)}</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )
+              })()}
+
               <ExportBtn
                 label="Kişiler Excel"
                 onClick={() => kisilerExcelExport(kisiler, sezonAd)}
