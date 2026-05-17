@@ -250,11 +250,57 @@ export default function RaporlarSayfasi({ sezon }) {
             <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Kişi kaydı yok</div>
           ) : (
             <>
+              {kisiler.map(k => {
+                const kH = hareketler.filter(h => h.kisi_id === k.id)
+                const toplamVerilen = kH.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+                const toplamAlinan = kH.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
+                const kalan = toplamAlinan - toplamVerilen
+                if (kH.length === 0) return null
+                return (
+                  <div key={k.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>👤 {k.ad}</div>
+
+                    {/* Hareketler */}
+                    {[...kH].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)).map(h => (
+                      <div key={h.id} style={{
+                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                        paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
+                      }}>
+                        <div>
+                          <div style={{ fontWeight: 600 }}>{h.kalem || h.tur}</div>
+                          {h.aciklama && <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{h.aciklama}</div>}
+                          <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{tarihBiçim(h.tarih)}</div>
+                        </div>
+                        <span style={{ fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                          {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Toplamlar */}
+                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '2px solid var(--kenar)' }}>
+                      {[
+                        { label: 'Toplam Verilen', tutar: toplamVerilen, renk: 'var(--kirmizi)' },
+                        { label: 'Toplam Alınan', tutar: toplamAlinan, renk: 'var(--yesil)' },
+                        { label: 'Kalan', tutar: Math.abs(kalan), renk: kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)', prefix: kalan >= 0 ? '(Bende) ' : '(Onda) ' },
+                      ].map(r => (
+                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 5, fontSize: 13 }}>
+                          <span style={{ fontWeight: 600 }}>{r.label}</span>
+                          <span style={{ fontWeight: 800, color: r.renk }}>{r.prefix || ''}{paraBiçim(r.tutar)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+
+              {/* Hareketi olmayan kişiler */}
               <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                {kisiler.map((k, i) => (
+                <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 12, color: 'var(--yazi-hafif)' }}>Hareketsiz Kişiler</div>
+                {kisiler.filter(k => hareketler.filter(h => h.kisi_id === k.id).length === 0).map((k, i) => (
                   <div key={k.id} style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    paddingBlock: 10, borderBottom: i < kisiler.length - 1 ? '1px solid var(--kenar)' : 'none',
+                    paddingBlock: 8, borderBottom: i < kisiler.length - 1 ? '1px solid var(--kenar)' : 'none',
                   }}>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{k.ad}</div>
