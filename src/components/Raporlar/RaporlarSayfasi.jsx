@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { hareketleriOku, firmalariOku, tarlalariOku, kisileriOku, sezonOzeti } from '../../store/db'
-import { paraBiçim, tarihBiçim } from '../../utils/format'
+﻿import { useState } from 'react'
+import { hareketleriOku, firmalariOku, tarlalariOku, kisileriOku, sezonOzeti, iscilikKayitlariniOku } from '../../store/db'
+import { paraBiÃ§im, tarihBiÃ§im } from '../../utils/format'
 import {
   hareketleriExcelExport,
   firmalarExcelExport,
@@ -23,7 +23,7 @@ const BTN = {
   tam: { background: '#0F6E56', color: '#fff', flex: 1 },
 }
 
-function ExportBtn({ onClick, renk = 'yesil', label, icon = '📥' }) {
+function ExportBtn({ onClick, renk = 'yesil', label, icon = 'ğŸ“¥' }) {
   return (
     <button onClick={onClick} style={{ ...BTN.base, ...BTN[renk] }}>
       {icon} {label}
@@ -37,12 +37,13 @@ export default function RaporlarSayfasi({ sezon }) {
   const firmalar = firmalariOku()
   const tarlalar = tarlalariOku()
   const kisiler = kisileriOku()
+  const iscilikKayitlari = iscilikKayitlariniOku(sezon?.id)
   const ozet = sezonOzeti(sezon?.id)
   const sezonAd = sezon?.ad || 'Sezon'
 
   const kalemGiderleri = {}
   hareketler.filter(h => h.yon === 'gider').forEach(h => {
-    kalemGiderleri[h.kalem || 'Diğer'] = (kalemGiderleri[h.kalem || 'Diğer'] || 0) + (h.tutar || 0)
+    kalemGiderleri[h.kalem || 'DiÄŸer'] = (kalemGiderleri[h.kalem || 'DiÄŸer'] || 0) + (h.tutar || 0)
   })
 
   const firmaOzetleri = firmalar.map(firma => {
@@ -61,11 +62,11 @@ export default function RaporlarSayfasi({ sezon }) {
   })
 
   const tabs = [
-    { id: 'sezon', label: '📊 Sezon' },
-    { id: 'firma', label: '🏢 Firma' },
-    { id: 'tarla', label: '🌾 Tarla' },
-    { id: 'kalem', label: '📦 Kalem' },
-    { id: 'kisiler', label: '👥 Kişiler' },
+    { id: 'sezon', label: 'ğŸ“Š Sezon' },
+    { id: 'firma', label: 'ğŸ¢ Firma' },
+    { id: 'tarla', label: 'ğŸŒ¾ Tarla' },
+    { id: 'kalem', label: 'ğŸ“¦ Kalem' },
+    { id: 'kisiler', label: 'ğŸ’° Åahsi' },
   ]
 
   return (
@@ -80,10 +81,10 @@ export default function RaporlarSayfasi({ sezon }) {
           borderRadius: 12, fontSize: 14,
         }}
       >
-        📋 Tam Raporu İndir (Tüm Modüller)
+        ğŸ“‹ Tam Raporu Ä°ndir (TÃ¼m ModÃ¼ller)
       </button>
 
-      {/* Tab seçici */}
+      {/* Tab seÃ§ici */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setAktifTab(t.id)} style={{
@@ -101,7 +102,7 @@ export default function RaporlarSayfasi({ sezon }) {
         <div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
             <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
-              📊 {sezonAd} Genel Özet
+              ğŸ“Š {sezonAd} Genel Ã–zet
             </div>
             {[
               { label: 'Toplam Gelir', tutar: ozet.toplamGelir, renk: 'var(--yesil)' },
@@ -113,7 +114,7 @@ export default function RaporlarSayfasi({ sezon }) {
                 paddingBlock: 10, borderBottom: '1px solid var(--kenar)',
               }}>
                 <span style={{ fontSize: 14 }}>{r.label}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
               </div>
             ))}
           </div>
@@ -125,7 +126,7 @@ export default function RaporlarSayfasi({ sezon }) {
             />
             <ExportBtn
               label="WhatsApp"
-              icon="📱"
+              icon="ğŸ“±"
               renk="whatsapp"
               onClick={() => whatsappOzet(ozet, sezonAd)}
             />
@@ -137,12 +138,12 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'firma' && (
         <div>
           {firmaOzetleri.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydı yok</div>
+            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydÄ± yok</div>
           ) : (
             <>
               {firmaOzetleri.map(f => (
                 <div key={f.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>🏢 {f.ad}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>ğŸ¢ {f.ad}</div>
                   {[
                     { label: 'Gelen Nakit', tutar: f.gelenNakit, renk: 'var(--yesil)' },
                     { label: 'Harcanan', tutar: f.harcanan, renk: 'var(--kirmizi)' },
@@ -153,7 +154,7 @@ export default function RaporlarSayfasi({ sezon }) {
                       paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
                     }}>
                       <span>{r.label}</span>
-                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
+                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
                     </div>
                   ))}
                 </div>
@@ -171,26 +172,26 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'tarla' && (
         <div>
           {tarlaOzetleri.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Tarla kaydı yok</div>
+            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Tarla kaydÄ± yok</div>
           ) : (
             <>
               {tarlaOzetleri.map(t => (
                 <div key={t.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>🌾 {t.ad}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>ğŸŒ¾ {t.ad}</div>
                   <div style={{ fontSize: 12, color: 'var(--yazi-hafif)', marginBottom: 12 }}>
-                    {t.urun} · {t.dekar} dk · {t.sahip}
+                    {t.urun} Â· {t.dekar} dk Â· {t.sahip}
                   </div>
                   {[
                     { label: 'Toplam Gider', tutar: t.gider, renk: 'var(--kirmizi)' },
                     { label: 'Toplam Gelir', tutar: t.gelir, renk: 'var(--yesil)' },
-                    { label: 'Dekar Başı Maliyet', tutar: t.dekarMaliyet, renk: 'var(--amber)' },
+                    { label: 'Dekar BaÅŸÄ± Maliyet', tutar: t.dekarMaliyet, renk: 'var(--amber)' },
                   ].map(r => (
                     <div key={r.label} style={{
                       display: 'flex', justifyContent: 'space-between',
                       paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
                     }}>
                       <span>{r.label}</span>
-                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
+                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
                     </div>
                   ))}
                 </div>
@@ -208,9 +209,9 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'kalem' && (
         <div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Kalem Bazlı Gider Analizi</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Kalem BazlÄ± Gider Analizi</div>
             {Object.keys(kalemGiderleri).length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--yazi-hafif)' }}>Gider kaydı yok</div>
+              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--yazi-hafif)' }}>Gider kaydÄ± yok</div>
             ) : Object.entries(kalemGiderleri)
               .sort((a, b) => b[1] - a[1])
               .map(([kalem, tutar]) => {
@@ -220,7 +221,7 @@ export default function RaporlarSayfasi({ sezon }) {
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                       <span style={{ fontSize: 14 }}>{kalem}</span>
                       <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>{paraBiçim(tutar)}</span>
+                        <span style={{ fontSize: 14, fontWeight: 700 }}>{paraBiÃ§im(tutar)}</span>
                         <span style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginLeft: 6 }}>%{yuzde.toFixed(0)}</span>
                       </div>
                     </div>
@@ -243,94 +244,130 @@ export default function RaporlarSayfasi({ sezon }) {
         </div>
       )}
 
-      {/* Kişiler Raporu */}
-      {aktifTab === 'kisiler' && (
-        <div>
-          {kisiler.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Kişi kaydı yok</div>
-          ) : (
-            <>
-              {kisiler.map(k => {
-                const kH = hareketler.filter(h => h.kisi_id === k.id)
-                const toplamVerilen = kH.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
-                const toplamAlinan = kH.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
-                const kalan = toplamAlinan - toplamVerilen
-                if (kH.length === 0) return null
-                return (
-                  <div key={k.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>👤 {k.ad}</div>
-
-                    {/* Hareketler */}
-                    {[...kH].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)).map(h => (
-                      <div key={h.id} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                        paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
-                      }}>
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{h.kalem || h.tur}</div>
-                          {h.aciklama && <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{h.aciklama}</div>}
-                          <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{tarihBiçim(h.tarih)}</div>
-                        </div>
-                        <span style={{ fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
-                          {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
-                        </span>
-                      </div>
-                    ))}
-
-                    {/* Toplamlar */}
-                    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '2px solid var(--kenar)' }}>
-                      {[
-                        { label: 'Toplam Verilen', tutar: toplamVerilen, renk: 'var(--kirmizi)' },
-                        { label: 'Toplam Alınan', tutar: toplamAlinan, renk: 'var(--yesil)' },
-                        { label: 'Kalan', tutar: Math.abs(kalan), renk: kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)', prefix: kalan >= 0 ? '(Bende) ' : '(Onda) ' },
-                      ].map(r => (
-                        <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 5, fontSize: 13 }}>
-                          <span style={{ fontWeight: 600 }}>{r.label}</span>
-                          <span style={{ fontWeight: 800, color: r.renk }}>{r.prefix || ''}{paraBiçim(r.tutar)}</span>
+      {/* Şahsi Hesap Raporu */}
+      {aktifTab === 'kisiler' && (() => {
+        const sahsiH = hareketler.filter(h => h.modul === 'sahsi')
+        const sanayiH = hareketler.filter(h => h.modul === 'sanayi')
+        const kisiH = hareketler.filter(h => kisiler.some(k => k.id === h.kisi_id))
+        const iscilikToplam = iscilikKayitlari.reduce((t, k) => t + (k.odeme_tutari || k.toplam || 0), 0)
+        const sahsiToplam = sahsiH.reduce((t, h) => t + (h.tutar || 0), 0)
+        const sanayiToplam = sanayiH.reduce((t, h) => t + (h.tutar || 0), 0)
+        const kisiVerilen = kisiH.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+        const genelToplam = sahsiToplam + sanayiToplam + iscilikToplam + kisiVerilen
+        return (
+          <div>
+            {kisiler.filter(k => hareketler.some(h => h.kisi_id === k.id)).length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>👥 Kişi Ödemeleri</div>
+                {kisiler.map(k => {
+                  const kH = hareketler.filter(h => h.kisi_id === k.id)
+                  if (kH.length === 0) return null
+                  const verilen = kH.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+                  const alinan = kH.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
+                  const kalan = alinan - verilen
+                  return (
+                    <div key={k.id} style={{ paddingBlock: 10, borderBottom: '1px solid var(--kenar)' }}>
+                      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6 }}>👤 {k.ad}</div>
+                      {[...kH].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)).map(h => (
+                        <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, paddingBlock: 3 }}>
+                          <span style={{ color: 'var(--yazi-hafif)' }}>{h.kalem || h.tur} · {tarihBiçim(h.tarih)}</span>
+                          <span style={{ fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                            {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
+                          </span>
                         </div>
                       ))}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 4, paddingTop: 4, borderTop: '1px dashed var(--kenar)' }}>
+                        <span style={{ fontWeight: 700 }}>Kalan</span>
+                        <span style={{ fontWeight: 800, color: kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                          {kalan >= 0 ? '(Bende) ' : '(Onda) '}{paraBiçim(Math.abs(kalan))}
+                        </span>
+                      </div>
                     </div>
+                  )
+                })}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
+                  <span style={{ fontWeight: 700 }}>Kişiler Toplamı</span>
+                  <span style={{ fontWeight: 800, color: 'var(--kirmizi)' }}>{paraBiçim(kisiVerilen)}</span>
+                </div>
+              </div>
+            )}
+            {sahsiH.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>💰 Şahsi Harcamalar</div>
+                {[...sahsiH].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)).map(h => (
+                  <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBlock: 7, borderBottom: '1px solid var(--kenar)' }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{h.kalem}</div>
+                      <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{h.aciklama || ''} · {tarihBiçim(h.tarih)}</div>
+                    </div>
+                    <span style={{ fontWeight: 700, color: 'var(--kirmizi)' }}>{paraBiçim(h.tutar)}</span>
                   </div>
-                )
-              })}
-
-              {/* Genel Toplam Kutusu */}
-              {(() => {
-                const tumKisiHareketler = hareketler.filter(h => kisiler.some(k => k.id === h.kisi_id))
-                const genelVerilen = tumKisiHareketler.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
-                const genelAlinan = tumKisiHareketler.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
-                const genelKalan = genelAlinan - genelVerilen
-                return (
-                  <div style={{ background: '#0F6E56', borderRadius: 12, padding: 20, marginBottom: 12 }}>
-                    <div style={{ color: '#fff', fontSize: 14, fontWeight: 800, marginBottom: 14 }}>
-                      📊 Tüm Kişiler — Genel Toplam
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
+                  <span style={{ fontWeight: 700 }}>Toplam</span>
+                  <span style={{ fontWeight: 800, color: 'var(--kirmizi)' }}>{paraBiçim(sahsiToplam)}</span>
+                </div>
+              </div>
+            )}
+            {sanayiH.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>🔧 Sanayi & Hizmet</div>
+                {[...sanayiH].sort((a, b) => new Date(a.tarih) - new Date(b.tarih)).map(h => (
+                  <div key={h.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBlock: 7, borderBottom: '1px solid var(--kenar)' }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{h.kalem}</div>
+                      <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{h.aciklama || ''} · {tarihBiçim(h.tarih)}</div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Toplam Verilen</span>
-                      <span style={{ color: '#FCA5A5', fontWeight: 800, fontSize: 15 }}>{paraBiçim(genelVerilen)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid rgba(255,255,255,0.2)' }}>
-                      <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14 }}>Toplam Alınan</span>
-                      <span style={{ color: '#86EFAC', fontWeight: 800, fontSize: 15 }}>{paraBiçim(genelAlinan)}</span>
-                    </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8 }}>
-                      <span style={{ color: '#fff', fontSize: 14, fontWeight: 700 }}>Net Kalan</span>
-                      <span style={{ color: '#fff', fontWeight: 900, fontSize: 16 }}>
-                        {genelKalan >= 0 ? '(Bende) ' : '(Onda) '}{paraBiçim(Math.abs(genelKalan))}
-                      </span>
-                    </div>
+                    <span style={{ fontWeight: 700, color: 'var(--kirmizi)' }}>{paraBiçim(h.tutar)}</span>
                   </div>
-                )
-              })()}
-
-              <ExportBtn
-                label="Kişiler Excel"
-                onClick={() => kisilerExcelExport(kisiler, sezonAd)}
-              />
-            </>
-          )}
-        </div>
-      )}
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
+                  <span style={{ fontWeight: 700 }}>Toplam</span>
+                  <span style={{ fontWeight: 800, color: 'var(--kirmizi)' }}>{paraBiçim(sanayiToplam)}</span>
+                </div>
+              </div>
+            )}
+            {iscilikKayitlari.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+                <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>👷 İşçilik</div>
+                {iscilikKayitlari.map(k => (
+                  <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBlock: 7, borderBottom: '1px solid var(--kenar)' }}>
+                    <div>
+                      <div style={{ fontWeight: 600 }}>{k.is_tanimi || 'İşçilik'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{k.gun_sayisi} gün · {k.kisi_sayisi} kişi · {k.odendi ? '✅ Ödendi' : '⏳ Bekliyor'}</div>
+                    </div>
+                    <span style={{ fontWeight: 700, color: 'var(--kirmizi)' }}>{paraBiçim(k.odeme_tutari || k.toplam || 0)}</span>
+                  </div>
+                ))}
+                <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, fontSize: 13 }}>
+                  <span style={{ fontWeight: 700 }}>Toplam</span>
+                  <span style={{ fontWeight: 800, color: 'var(--kirmizi)' }}>{paraBiçim(iscilikToplam)}</span>
+                </div>
+              </div>
+            )}
+            <div style={{ background: '#0F6E56', borderRadius: 12, padding: 20, marginBottom: 12 }}>
+              <div style={{ color: '#fff', fontSize: 14, fontWeight: 800, marginBottom: 14 }}>💰 Şahsi Hesap Genel Toplam — {sezonAd}</div>
+              {[
+                { label: 'Kişi Ödemeleri', tutar: kisiVerilen },
+                { label: 'Şahsi Harcamalar', tutar: sahsiToplam },
+                { label: 'Sanayi & Hizmet', tutar: sanayiToplam },
+                { label: 'İşçilik', tutar: iscilikToplam },
+              ].map(r => (
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 7, borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                  <span style={{ color: 'rgba(255,255,255,0.8)', fontSize: 13 }}>{r.label}</span>
+                  <span style={{ color: '#FCA5A5', fontWeight: 700 }}>{paraBiçim(r.tutar)}</span>
+                </div>
+              ))}
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 4 }}>
+                <span style={{ color: '#fff', fontSize: 15, fontWeight: 800 }}>TOPLAM HARCAMA</span>
+                <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{paraBiçim(genelToplam)}</span>
+              </div>
+            </div>
+            <ExportBtn label="Kişiler Excel" onClick={() => kisilerExcelExport(kisiler, sezonAd)} />
+          </div>
+        )
+      })()}
     </div>
   )
 }
+
