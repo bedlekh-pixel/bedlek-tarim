@@ -1,4 +1,6 @@
-// Veri katmanı — tüm veriler localStorage'da saklanır
+// Veri katmanı — okuma localStorage'dan (anlık), yazma localStorage + Supabase'e (kalıcı)
+
+import { supabase } from './supabase'
 
 const KEYS = {
   firmalar: 'bt_firmalar',
@@ -12,6 +14,8 @@ const KEYS = {
   iscilik_kayitlari: 'bt_iscilik_kayitlari',
 }
 
+// ─── localStorage ────────────────────────────────────────────
+
 function oku(key) {
   try {
     const veri = localStorage.getItem(key)
@@ -23,6 +27,31 @@ function oku(key) {
 
 function yaz(key, veri) {
   localStorage.setItem(key, JSON.stringify(veri))
+}
+
+// ─── Supabase sync ───────────────────────────────────────────
+
+async function bulutaYaz(key, veri) {
+  try {
+    await supabase
+      .from('store')
+      .upsert({ key, value: veri, guncelleme: new Date().toISOString() })
+  } catch {
+    // Supabase yazma başarısız — localStorage'daki veri korunur
+  }
+}
+
+async function buluttanOku(key) {
+  try {
+    const { data } = await supabase
+      .from('store')
+      .select('value')
+      .eq('key', key)
+      .single()
+    return data?.value ?? null
+  } catch {
+    return null
+  }
 }
 
 // ─── Başlangıç verileri ──────────────────────────────────────
@@ -62,6 +91,19 @@ export function dbInit() {
   if (!oku(KEYS.iscilik_kayitlari)) yaz(KEYS.iscilik_kayitlari, [])
 }
 
+// Buluttan çek, localStorage'ı güncelle
+export async function dbSyncFromCloud() {
+  const tumKeyler = Object.values(KEYS)
+  const sonuclar = await Promise.all(tumKeyler.map(key => buluttanOku(key)))
+
+  tumKeyler.forEach((key, i) => {
+    const cloudVeri = sonuclar[i]
+    if (cloudVeri !== null) {
+      yaz(key, cloudVeri)
+    }
+  })
+}
+
 // ─── İşçi Grupları ───────────────────────────────────────────
 
 export function isciGruplariniOku() {
@@ -71,17 +113,22 @@ export function isciGruplariniOku() {
 export function isciGrubuEkle(grup) {
   const liste = isciGruplariniOku()
   const yeni = { ...grup, id: grup.id || `grup_${Date.now()}`, aktif: true }
-  yaz(KEYS.isci_gruplari, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.isci_gruplari, guncelliste)
+  bulutaYaz(KEYS.isci_gruplari, guncelliste)
   return yeni
 }
 
 export function isciGrubuDuzenle(id, degisiklikler) {
   const liste = isciGruplariniOku().map(g => g.id === id ? { ...g, ...degisiklikler } : g)
   yaz(KEYS.isci_gruplari, liste)
+  bulutaYaz(KEYS.isci_gruplari, liste)
 }
 
 export function isciGrubuSil(id) {
-  yaz(KEYS.isci_gruplari, isciGruplariniOku().filter(g => g.id !== id))
+  const liste = isciGruplariniOku().filter(g => g.id !== id)
+  yaz(KEYS.isci_gruplari, liste)
+  bulutaYaz(KEYS.isci_gruplari, liste)
 }
 
 // ─── İşçilik Kayıtları ───────────────────────────────────────
@@ -95,7 +142,9 @@ export function iscilikKayitlariniOku(sezonId) {
 export function iscilikKaydiEkle(kayit) {
   const liste = oku(KEYS.iscilik_kayitlari) || []
   const yeni = { ...kayit, id: kayit.id || `isk_${Date.now()}`, olusturma: new Date().toISOString() }
-  yaz(KEYS.iscilik_kayitlari, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.iscilik_kayitlari, guncelliste)
+  bulutaYaz(KEYS.iscilik_kayitlari, guncelliste)
   return yeni
 }
 
@@ -104,10 +153,13 @@ export function iscilikKaydiDuzenle(id, degisiklikler) {
     k.id === id ? { ...k, ...degisiklikler } : k
   )
   yaz(KEYS.iscilik_kayitlari, liste)
+  bulutaYaz(KEYS.iscilik_kayitlari, liste)
 }
 
 export function iscilikKaydiSil(id) {
-  yaz(KEYS.iscilik_kayitlari, (oku(KEYS.iscilik_kayitlari) || []).filter(k => k.id !== id))
+  const liste = (oku(KEYS.iscilik_kayitlari) || []).filter(k => k.id !== id)
+  yaz(KEYS.iscilik_kayitlari, liste)
+  bulutaYaz(KEYS.iscilik_kayitlari, liste)
 }
 
 // ─── Ayarlar ─────────────────────────────────────────────────
@@ -117,8 +169,9 @@ export function ayarlariOku() {
 }
 
 export function aktifSezonu(sezonId) {
-  const ayarlar = ayarlariOku()
-  yaz(KEYS.ayarlar, { ...ayarlar, aktifSezon: sezonId })
+  const ayarlar = { ...ayarlariOku(), aktifSezon: sezonId }
+  yaz(KEYS.ayarlar, ayarlar)
+  bulutaYaz(KEYS.ayarlar, ayarlar)
 }
 
 // ─── Sezonlar ────────────────────────────────────────────────
@@ -130,12 +183,16 @@ export function sezonlariOku() {
 export function sezonEkle(sezon) {
   const liste = sezonlariOku()
   const yeni = { ...sezon, id: sezon.id || Date.now().toString() }
-  yaz(KEYS.sezonlar, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.sezonlar, guncelliste)
+  bulutaYaz(KEYS.sezonlar, guncelliste)
   return yeni
 }
 
 export function sezonSil(id) {
-  yaz(KEYS.sezonlar, sezonlariOku().filter(s => s.id !== id))
+  const liste = sezonlariOku().filter(s => s.id !== id)
+  yaz(KEYS.sezonlar, liste)
+  bulutaYaz(KEYS.sezonlar, liste)
 }
 
 // ─── Firmalar ────────────────────────────────────────────────
@@ -147,17 +204,22 @@ export function firmalariOku() {
 export function firmaEkle(firma) {
   const liste = firmalariOku()
   const yeni = { ...firma, id: firma.id || `firma_${Date.now()}`, aktif: true }
-  yaz(KEYS.firmalar, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.firmalar, guncelliste)
+  bulutaYaz(KEYS.firmalar, guncelliste)
   return yeni
 }
 
 export function firmaDuzenle(id, degisiklikler) {
   const liste = firmalariOku().map(f => f.id === id ? { ...f, ...degisiklikler } : f)
   yaz(KEYS.firmalar, liste)
+  bulutaYaz(KEYS.firmalar, liste)
 }
 
 export function firmaSil(id) {
-  yaz(KEYS.firmalar, firmalariOku().filter(f => f.id !== id))
+  const liste = firmalariOku().filter(f => f.id !== id)
+  yaz(KEYS.firmalar, liste)
+  bulutaYaz(KEYS.firmalar, liste)
 }
 
 // ─── Tarlalar ────────────────────────────────────────────────
@@ -169,17 +231,22 @@ export function tarlalariOku() {
 export function tarlaEkle(tarla) {
   const liste = tarlalariOku()
   const yeni = { ...tarla, id: tarla.id || `tarla_${Date.now()}` }
-  yaz(KEYS.tarlalar, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.tarlalar, guncelliste)
+  bulutaYaz(KEYS.tarlalar, guncelliste)
   return yeni
 }
 
 export function tarlaDuzenle(id, degisiklikler) {
   const liste = tarlalariOku().map(t => t.id === id ? { ...t, ...degisiklikler } : t)
   yaz(KEYS.tarlalar, liste)
+  bulutaYaz(KEYS.tarlalar, liste)
 }
 
 export function tarlaSil(id) {
-  yaz(KEYS.tarlalar, tarlalariOku().filter(t => t.id !== id))
+  const liste = tarlalariOku().filter(t => t.id !== id)
+  yaz(KEYS.tarlalar, liste)
+  bulutaYaz(KEYS.tarlalar, liste)
 }
 
 // ─── Hareketler ──────────────────────────────────────────────
@@ -197,7 +264,9 @@ export function hareketEkle(hareket) {
     id: hareket.id || Date.now(),
     olusturma: new Date().toISOString(),
   }
-  yaz(KEYS.hareketler, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.hareketler, guncelliste)
+  bulutaYaz(KEYS.hareketler, guncelliste)
   return yeni
 }
 
@@ -206,13 +275,16 @@ export function hareketDuzenle(id, degisiklikler) {
     h.id === id ? { ...h, ...degisiklikler } : h
   )
   yaz(KEYS.hareketler, liste)
+  bulutaYaz(KEYS.hareketler, liste)
 }
 
 export function hareketSil(id) {
-  yaz(KEYS.hareketler, (oku(KEYS.hareketler) || []).filter(h => h.id !== id))
+  const liste = (oku(KEYS.hareketler) || []).filter(h => h.id !== id)
+  yaz(KEYS.hareketler, liste)
+  bulutaYaz(KEYS.hareketler, liste)
 }
 
-// ─── Kişiler ────────────────────────────────────────────────
+// ─── Kişiler ─────────────────────────────────────────────────
 
 export function kisileriOku() {
   return oku(KEYS.kisiler) || []
@@ -221,17 +293,22 @@ export function kisileriOku() {
 export function kisiEkle(kisi) {
   const liste = kisileriOku()
   const yeni = { ...kisi, id: kisi.id || `kisi_${Date.now()}`, aktif: true }
-  yaz(KEYS.kisiler, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.kisiler, guncelliste)
+  bulutaYaz(KEYS.kisiler, guncelliste)
   return yeni
 }
 
 export function kisiDuzenle(id, degisiklikler) {
   const liste = kisileriOku().map(k => k.id === id ? { ...k, ...degisiklikler } : k)
   yaz(KEYS.kisiler, liste)
+  bulutaYaz(KEYS.kisiler, liste)
 }
 
 export function kisiSil(id) {
-  yaz(KEYS.kisiler, kisileriOku().filter(k => k.id !== id))
+  const liste = kisileriOku().filter(k => k.id !== id)
+  yaz(KEYS.kisiler, liste)
+  bulutaYaz(KEYS.kisiler, liste)
 }
 
 // ─── Kalemler ────────────────────────────────────────────────
@@ -243,13 +320,16 @@ export function kalemleriOku() {
 export function kalemEkle(kalem) {
   const liste = kalemleriOku()
   const yeni = { ...kalem, id: kalem.id || `kalem_${Date.now()}`, sabit: false }
-  yaz(KEYS.kalemler, [...liste, yeni])
+  const guncelliste = [...liste, yeni]
+  yaz(KEYS.kalemler, guncelliste)
+  bulutaYaz(KEYS.kalemler, guncelliste)
   return yeni
 }
 
 export function kalemSil(id) {
   const liste = kalemleriOku().filter(k => k.sabit || k.id !== id)
   yaz(KEYS.kalemler, liste)
+  bulutaYaz(KEYS.kalemler, liste)
 }
 
 // ─── Hesaplamalar ────────────────────────────────────────────
@@ -265,11 +345,7 @@ export function firmaOzeti(firmaId, sezonId) {
     .filter(h => h.tur === 'harcama' && h.kaynak === 'avans')
     .reduce((t, h) => t + (h.tutar || 0), 0)
 
-  return {
-    gelenNakit,
-    harcanan,
-    kalan: gelenNakit - harcanan,
-  }
+  return { gelenNakit, harcanan, kalan: gelenNakit - harcanan }
 }
 
 export function tarlaOzeti(tarlaId, sezonId) {
