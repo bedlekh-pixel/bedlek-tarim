@@ -155,18 +155,18 @@ function KisiDetay({ kisi: ilkKisi, sezon, onKapat, onSilindi }) {
   const [silOnay, setSilOnay] = useState(false)
   const [duzenleHareket, setDuzenleHareket] = useState(null)
   const [silHareket, setSilHareket] = useState(null)
+  const [, setYenileSayac] = useState(0)
+
+  const hareketler = hareketleriOku(sezon?.id).filter(h => h.kisi_id === kisi.id)
   const tur = KISI_TURLERI.find(t => t.id === kisi.tur)
   const toplamGelir = hareketler.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
   const toplamGider = hareketler.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
   const net = toplamGelir - toplamGider
 
-  const [hareketYenile, setHareketYenile] = useState(0)
-  const hareketler = hareketleriOku(sezon?.id).filter(h => h.kisi_id === kisi.id)
-
   function yenile() {
     const guncel = kisileriOku().find(k => k.id === kisi.id)
     if (guncel) setKisi(guncel)
-    setHareketYenile(n => n + 1)
+    setYenileSayac(n => n + 1)
   }
 
   return (
