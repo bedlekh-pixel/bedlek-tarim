@@ -1,6 +1,6 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { hareketleriOku, firmalariOku, tarlalariOku, kisileriOku, sezonOzeti, iscilikKayitlariniOku } from '../../store/db'
-import { paraBiÃ§im, tarihBiÃ§im } from '../../utils/format'
+import { paraBiçim, tarihBiçim } from '../../utils/format'
 import {
   hareketleriExcelExport,
   firmalarExcelExport,
@@ -20,10 +20,9 @@ const BTN = {
   yesil: { background: 'var(--yesil)', color: '#fff' },
   mavi: { background: '#185FA5', color: '#fff' },
   whatsapp: { background: '#25D366', color: '#fff' },
-  tam: { background: '#0F6E56', color: '#fff', flex: 1 },
 }
 
-function ExportBtn({ onClick, renk = 'yesil', label, icon = 'ğŸ“¥' }) {
+function ExportBtn({ onClick, renk = 'yesil', label, icon = '📥' }) {
   return (
     <button onClick={onClick} style={{ ...BTN.base, ...BTN[renk] }}>
       {icon} {label}
@@ -43,7 +42,7 @@ export default function RaporlarSayfasi({ sezon }) {
 
   const kalemGiderleri = {}
   hareketler.filter(h => h.yon === 'gider').forEach(h => {
-    kalemGiderleri[h.kalem || 'DiÄŸer'] = (kalemGiderleri[h.kalem || 'DiÄŸer'] || 0) + (h.tutar || 0)
+    kalemGiderleri[h.kalem || 'Diğer'] = (kalemGiderleri[h.kalem || 'Diğer'] || 0) + (h.tutar || 0)
   })
 
   const firmaOzetleri = firmalar.map(firma => {
@@ -62,29 +61,29 @@ export default function RaporlarSayfasi({ sezon }) {
   })
 
   const tabs = [
-    { id: 'sezon', label: 'ğŸ“Š Sezon' },
-    { id: 'firma', label: 'ğŸ¢ Firma' },
-    { id: 'tarla', label: 'ğŸŒ¾ Tarla' },
-    { id: 'kalem', label: 'ğŸ“¦ Kalem' },
-    { id: 'kisiler', label: 'ğŸ’° Åahsi' },
+    { id: 'sezon', label: '📊 Sezon' },
+    { id: 'firma', label: '🏢 Firma' },
+    { id: 'tarla', label: '🌾 Tarla' },
+    { id: 'kalem', label: '📦 Kalem' },
+    { id: 'kisiler', label: '💰 Şahsi' },
   ]
 
   return (
     <div className="sayfa">
 
-      {/* Tam Rapor butonu */}
+      {/* Tam Rapor */}
       <button
         onClick={() => tamRaporExport(sezon, hareketler, firmalar, tarlalar, kisiler)}
         style={{
-          width: '100%', marginBottom: 14, ...BTN.base,
-          background: '#0F6E56', color: '#fff', padding: '13px',
-          borderRadius: 12, fontSize: 14,
+          width: '100%', marginBottom: 14, display: 'flex', alignItems: 'center',
+          justifyContent: 'center', gap: 6, background: '#0F6E56', color: '#fff',
+          border: 'none', borderRadius: 12, padding: '13px', fontSize: 14, fontWeight: 700, cursor: 'pointer',
         }}
       >
-        ğŸ“‹ Tam Raporu Ä°ndir (TÃ¼m ModÃ¼ller)
+        📋 Tam Raporu İndir (Tüm Modüller)
       </button>
 
-      {/* Tab seÃ§ici */}
+      {/* Tab seçici */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, overflowX: 'auto' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setAktifTab(t.id)} style={{
@@ -101,35 +100,21 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'sezon' && (
         <div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>
-              ğŸ“Š {sezonAd} Genel Ã–zet
-            </div>
+            <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>📊 {sezonAd} Genel Özet</div>
             {[
               { label: 'Toplam Gelir', tutar: ozet.toplamGelir, renk: 'var(--yesil)' },
               { label: 'Toplam Gider', tutar: ozet.toplamGider, renk: 'var(--kirmizi)' },
               { label: 'Net Kar/Zarar', tutar: ozet.net, renk: ozet.net >= 0 ? 'var(--yesil)' : 'var(--kirmizi)' },
             ].map(r => (
-              <div key={r.label} style={{
-                display: 'flex', justifyContent: 'space-between',
-                paddingBlock: 10, borderBottom: '1px solid var(--kenar)',
-              }}>
+              <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 10, borderBottom: '1px solid var(--kenar)' }}>
                 <span style={{ fontSize: 14 }}>{r.label}</span>
-                <span style={{ fontSize: 14, fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
               </div>
             ))}
           </div>
-
           <div style={{ display: 'flex', gap: 8 }}>
-            <ExportBtn
-              label="Hareketler Excel"
-              onClick={() => hareketleriExcelExport(hareketler, tarlalar, firmalar, sezonAd)}
-            />
-            <ExportBtn
-              label="WhatsApp"
-              icon="ğŸ“±"
-              renk="whatsapp"
-              onClick={() => whatsappOzet(ozet, sezonAd)}
-            />
+            <ExportBtn label="Hareketler Excel" onClick={() => hareketleriExcelExport(hareketler, tarlalar, firmalar, sezonAd)} />
+            <ExportBtn label="WhatsApp" icon="📱" renk="whatsapp" onClick={() => whatsappOzet(ozet, sezonAd)} />
           </div>
         </div>
       )}
@@ -138,31 +123,25 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'firma' && (
         <div>
           {firmaOzetleri.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydÄ± yok</div>
+            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydı yok</div>
           ) : (
             <>
               {firmaOzetleri.map(f => (
                 <div key={f.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>ğŸ¢ {f.ad}</div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>🏢 {f.ad}</div>
                   {[
                     { label: 'Gelen Nakit', tutar: f.gelenNakit, renk: 'var(--yesil)' },
                     { label: 'Harcanan', tutar: f.harcanan, renk: 'var(--kirmizi)' },
                     { label: 'Kalan Bakiye', tutar: f.kalan, renk: f.kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)' },
                   ].map(r => (
-                    <div key={r.label} style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
-                    }}>
+                    <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13 }}>
                       <span>{r.label}</span>
-                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
+                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
                     </div>
                   ))}
                 </div>
               ))}
-              <ExportBtn
-                label="Firmalar Excel"
-                onClick={() => firmalarExcelExport(firmalar, hareketler, sezonAd)}
-              />
+              <ExportBtn label="Firmalar Excel" onClick={() => firmalarExcelExport(firmalar, hareketler, sezonAd)} />
             </>
           )}
         </div>
@@ -172,34 +151,26 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'tarla' && (
         <div>
           {tarlaOzetleri.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Tarla kaydÄ± yok</div>
+            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Tarla kaydı yok</div>
           ) : (
             <>
               {tarlaOzetleri.map(t => (
                 <div key={t.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>ğŸŒ¾ {t.ad}</div>
-                  <div style={{ fontSize: 12, color: 'var(--yazi-hafif)', marginBottom: 12 }}>
-                    {t.urun} Â· {t.dekar} dk Â· {t.sahip}
-                  </div>
+                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 4 }}>🌾 {t.ad}</div>
+                  <div style={{ fontSize: 12, color: 'var(--yazi-hafif)', marginBottom: 12 }}>{t.urun} · {t.dekar} dk · {t.sahip}</div>
                   {[
                     { label: 'Toplam Gider', tutar: t.gider, renk: 'var(--kirmizi)' },
                     { label: 'Toplam Gelir', tutar: t.gelir, renk: 'var(--yesil)' },
-                    { label: 'Dekar BaÅŸÄ± Maliyet', tutar: t.dekarMaliyet, renk: 'var(--amber)' },
+                    { label: 'Dekar Başı Maliyet', tutar: t.dekarMaliyet, renk: 'var(--amber)' },
                   ].map(r => (
-                    <div key={r.label} style={{
-                      display: 'flex', justifyContent: 'space-between',
-                      paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13,
-                    }}>
+                    <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13 }}>
                       <span>{r.label}</span>
-                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiÃ§im(r.tutar)}</span>
+                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
                     </div>
                   ))}
                 </div>
               ))}
-              <ExportBtn
-                label="Tarlalar Excel"
-                onClick={() => tarlalarExcelExport(tarlalar, hareketler, sezonAd)}
-              />
+              <ExportBtn label="Tarlalar Excel" onClick={() => tarlalarExcelExport(tarlalar, hareketler, sezonAd)} />
             </>
           )}
         </div>
@@ -209,37 +180,29 @@ export default function RaporlarSayfasi({ sezon }) {
       {aktifTab === 'kalem' && (
         <div>
           <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Kalem BazlÄ± Gider Analizi</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 14 }}>Kalem Bazlı Gider Analizi</div>
             {Object.keys(kalemGiderleri).length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--yazi-hafif)' }}>Gider kaydÄ± yok</div>
-            ) : Object.entries(kalemGiderleri)
-              .sort((a, b) => b[1] - a[1])
-              .map(([kalem, tutar]) => {
-                const yuzde = ozet.toplamGider > 0 ? (tutar / ozet.toplamGider) * 100 : 0
-                return (
-                  <div key={kalem} style={{ marginBottom: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 14 }}>{kalem}</span>
-                      <div style={{ textAlign: 'right' }}>
-                        <span style={{ fontSize: 14, fontWeight: 700 }}>{paraBiÃ§im(tutar)}</span>
-                        <span style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginLeft: 6 }}>%{yuzde.toFixed(0)}</span>
-                      </div>
-                    </div>
-                    <div style={{ background: '#F0EDE8', borderRadius: 99, height: 8 }}>
-                      <div style={{
-                        background: 'var(--kirmizi)', height: 8, borderRadius: 99,
-                        width: `${yuzde}%`, transition: 'width 0.3s',
-                      }} />
+              <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--yazi-hafif)' }}>Gider kaydı yok</div>
+            ) : Object.entries(kalemGiderleri).sort((a, b) => b[1] - a[1]).map(([kalem, tutar]) => {
+              const yuzde = ozet.toplamGider > 0 ? (tutar / ozet.toplamGider) * 100 : 0
+              return (
+                <div key={kalem} style={{ marginBottom: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 14 }}>{kalem}</span>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 14, fontWeight: 700 }}>{paraBiçim(tutar)}</span>
+                      <span style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginLeft: 6 }}>%{yuzde.toFixed(0)}</span>
                     </div>
                   </div>
-                )
-              })}
+                  <div style={{ background: '#F0EDE8', borderRadius: 99, height: 8 }}>
+                    <div style={{ background: 'var(--kirmizi)', height: 8, borderRadius: 99, width: `${yuzde}%`, transition: 'width 0.3s' }} />
+                  </div>
+                </div>
+              )
+            })}
           </div>
           {Object.keys(kalemGiderleri).length > 0 && (
-            <ExportBtn
-              label="Kalem Analizi Excel"
-              onClick={() => kalemlerExcelExport(hareketler, sezonAd)}
-            />
+            <ExportBtn label="Kalem Analizi Excel" onClick={() => kalemlerExcelExport(hareketler, sezonAd)} />
           )}
         </div>
       )}
@@ -256,6 +219,7 @@ export default function RaporlarSayfasi({ sezon }) {
         const genelToplam = sahsiToplam + sanayiToplam + iscilikToplam + kisiVerilen
         return (
           <div>
+            {/* Kişi Ödemeleri */}
             {kisiler.filter(k => hareketler.some(h => h.kisi_id === k.id)).length > 0 && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>👥 Kişi Ödemeleri</div>
@@ -291,6 +255,8 @@ export default function RaporlarSayfasi({ sezon }) {
                 </div>
               </div>
             )}
+
+            {/* Şahsi Harcamalar */}
             {sahsiH.length > 0 && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>💰 Şahsi Harcamalar</div>
@@ -309,6 +275,8 @@ export default function RaporlarSayfasi({ sezon }) {
                 </div>
               </div>
             )}
+
+            {/* Sanayi & Hizmet */}
             {sanayiH.length > 0 && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>🔧 Sanayi & Hizmet</div>
@@ -327,6 +295,8 @@ export default function RaporlarSayfasi({ sezon }) {
                 </div>
               </div>
             )}
+
+            {/* İşçilik */}
             {iscilikKayitlari.length > 0 && (
               <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
                 <div style={{ fontWeight: 800, fontSize: 14, marginBottom: 12 }}>👷 İşçilik</div>
@@ -334,7 +304,9 @@ export default function RaporlarSayfasi({ sezon }) {
                   <div key={k.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, paddingBlock: 7, borderBottom: '1px solid var(--kenar)' }}>
                     <div>
                       <div style={{ fontWeight: 600 }}>{k.is_tanimi || 'İşçilik'}</div>
-                      <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{k.gun_sayisi} gün · {k.kisi_sayisi} kişi · {k.odendi ? '✅ Ödendi' : '⏳ Bekliyor'}</div>
+                      <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>
+                        {k.gun_sayisi} gün · {k.kisi_sayisi} kişi · {k.odendi ? '✅ Ödendi' : '⏳ Bekliyor'}
+                      </div>
                     </div>
                     <span style={{ fontWeight: 700, color: 'var(--kirmizi)' }}>{paraBiçim(k.odeme_tutari || k.toplam || 0)}</span>
                   </div>
@@ -345,8 +317,12 @@ export default function RaporlarSayfasi({ sezon }) {
                 </div>
               </div>
             )}
+
+            {/* Genel Toplam */}
             <div style={{ background: '#0F6E56', borderRadius: 12, padding: 20, marginBottom: 12 }}>
-              <div style={{ color: '#fff', fontSize: 14, fontWeight: 800, marginBottom: 14 }}>💰 Şahsi Hesap Genel Toplam — {sezonAd}</div>
+              <div style={{ color: '#fff', fontSize: 14, fontWeight: 800, marginBottom: 14 }}>
+                💰 Şahsi Hesap Genel Toplam — {sezonAd}
+              </div>
               {[
                 { label: 'Kişi Ödemeleri', tutar: kisiVerilen },
                 { label: 'Şahsi Harcamalar', tutar: sahsiToplam },
@@ -358,11 +334,12 @@ export default function RaporlarSayfasi({ sezon }) {
                   <span style={{ color: '#FCA5A5', fontWeight: 700 }}>{paraBiçim(r.tutar)}</span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 12, marginTop: 4 }}>
                 <span style={{ color: '#fff', fontSize: 15, fontWeight: 800 }}>TOPLAM HARCAMA</span>
                 <span style={{ color: '#fff', fontWeight: 900, fontSize: 18 }}>{paraBiçim(genelToplam)}</span>
               </div>
             </div>
+
             <ExportBtn label="Kişiler Excel" onClick={() => kisilerExcelExport(kisiler, sezonAd)} />
           </div>
         )
@@ -370,4 +347,3 @@ export default function RaporlarSayfasi({ sezon }) {
     </div>
   )
 }
-
