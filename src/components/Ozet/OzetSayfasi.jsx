@@ -250,10 +250,12 @@ function HizliOdemeModal({ sezon, onKapat, onKaydet }) {
 function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
   const firmalar = firmalariOku()
   const tarlalar = tarlalariOku()
+  const tedarikciler = kisileriOku().filter(k => k.tur === 'tedarikci')
 
   const [form, setForm] = useState({
     kaynak: 'sozlesmeli',
     firma_id: '',
+    kisi_id: '',
     kalem: '',
     miktar: '',
     birim: 'kg',
@@ -290,6 +292,7 @@ function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
       tutar: tutar || 0,
       kaynak: form.kaynak === 'sozlesmeli' ? 'avans' : 'cep',
       firma_id: form.kaynak === 'sozlesmeli' ? form.firma_id : '',
+      kisi_id: form.kisi_id || '',
       tarla_id: form.tarla_id,
       aciklama,
       sezon: sezon?.id,
@@ -333,6 +336,17 @@ function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
             <select value={form.firma_id} onChange={e => f('firma_id', e.target.value)} style={inputStil}>
               <option value="">Firma seç</option>
               {firmalar.map(f2 => <option key={f2.id} value={f2.id}>{f2.ad}</option>)}
+            </select>
+          </div>
+        )}
+
+        {/* Tedarikçi */}
+        {tedarikciler.length > 0 && (
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Tedarikçi (opsiyonel)</label>
+            <select value={form.kisi_id} onChange={e => f('kisi_id', e.target.value)} style={inputStil}>
+              <option value="">Tedarikçi seç</option>
+              {tedarikciler.map(k => <option key={k.id} value={k.id}>{k.ad}</option>)}
             </select>
           </div>
         )}

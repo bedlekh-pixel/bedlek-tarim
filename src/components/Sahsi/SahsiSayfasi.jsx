@@ -67,6 +67,7 @@ function TarlaSecici({ tarlalar: baseTarlalar, secili, onSec, inputStil }) {
 
 // ─── Şahsi Harcama Formu ─────────────────────────────────────
 function HarcamaForm({ sezon, tarlalar, kalemler, onKapat, onKaydet, duzenlenen }) {
+  const tedarikciler = kisileriOku().filter(k => k.tur === 'tedarikci')
   const [form, setForm] = useState(duzenlenen ? {
     tarih: duzenlenen.tarih || bugun(),
     tarla_id: duzenlenen.tarla_id || '',
@@ -76,7 +77,8 @@ function HarcamaForm({ sezon, tarlalar, kalemler, onKapat, onKaydet, duzenlenen 
     birim_fiyat: duzenlenen.birim_fiyat != null ? String(duzenlenen.birim_fiyat) : '',
     tutar: duzenlenen.tutar != null ? String(duzenlenen.tutar) : '',
     aciklama: duzenlenen.aciklama || '',
-  } : { tarih: bugun(), tarla_id: '', kalem: '', miktar: '', birim: 'kg', birim_fiyat: '', tutar: '', aciklama: '' })
+    kisi_id: duzenlenen.kisi_id || '',
+  } : { tarih: bugun(), tarla_id: '', kalem: '', miktar: '', birim: 'kg', birim_fiyat: '', tutar: '', aciklama: '', kisi_id: '' })
 
   function f(alan, deger) {
     setForm(prev => {
@@ -98,6 +100,7 @@ function HarcamaForm({ sezon, tarlalar, kalemler, onKapat, onKaydet, duzenlenen 
       birim: form.birim, birim_fiyat: parseFloat(form.birim_fiyat) || 0,
       tutar: parseFloat(form.tutar) || 0,
       tarla_id: form.tarla_id || null, aciklama: form.aciklama,
+      kisi_id: form.kisi_id || null,
     }
     if (duzenlenen) hareketDuzenle(duzenlenen.id, veri)
     else hareketEkle(veri)
@@ -149,6 +152,15 @@ function HarcamaForm({ sezon, tarlalar, kalemler, onKapat, onKaydet, duzenlenen 
               Toplam: {paraBiçim(parseFloat(form.tutar))}
             </div>
           ) : null}
+          {tedarikciler.length > 0 && (
+            <div>
+              <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Tedarikçi (opsiyonel)</label>
+              <select value={form.kisi_id} onChange={e => f('kisi_id', e.target.value)} style={inp}>
+                <option value="">Tedarikçi seç</option>
+                {tedarikciler.map(k => <option key={k.id} value={k.id}>{k.ad}</option>)}
+              </select>
+            </div>
+          )}
           <TarlaSecici tarlalar={tarlalariOku()} secili={form.tarla_id} onSec={id => f('tarla_id', id)} inputStil={inp} />
           <div>
             <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Tarih</label>
