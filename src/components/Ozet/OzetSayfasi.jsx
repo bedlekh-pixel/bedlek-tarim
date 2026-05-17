@@ -251,6 +251,7 @@ function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
   const firmalar = firmalariOku()
   const tarlalar = tarlalariOku()
   const tedarikciler = kisileriOku().filter(k => k.tur === 'tedarikci')
+  const kalemler = kalemleriOku()
 
   const [form, setForm] = useState({
     kaynak: 'sozlesmeli',
@@ -353,9 +354,20 @@ function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
 
         {/* Kalem */}
         <div style={{ marginBottom: 14 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Hammadde</label>
+          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Hammadde / Kalem</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+            {kalemler.map(k => (
+              <button key={k.id} onClick={() => f('kalem', k.ad)} style={{
+                padding: '6px 12px', borderRadius: 8, border: '1.5px solid', cursor: 'pointer', fontSize: 12,
+                fontWeight: form.kalem === k.ad ? 700 : 400,
+                background: form.kalem === k.ad ? k.renk : '#fff',
+                borderColor: form.kalem === k.ad ? k.renk : 'var(--kenar)',
+                color: form.kalem === k.ad ? '#fff' : 'var(--yazi)',
+              }}>{k.ikon} {k.ad}</button>
+            ))}
+          </div>
           <input type="text" value={form.kalem} onChange={e => f('kalem', e.target.value)}
-            placeholder="örn: Buğday tohumu, Gübre..." style={inputStil} />
+            placeholder="veya özel gir: Buğday tohumu..." style={inputStil} />
         </div>
 
         {/* Miktar + Birim */}
@@ -393,9 +405,9 @@ function HizliHammaddeModal({ sezon, onKapat, onKaydet }) {
 
         {/* Açıklama */}
         <div style={{ marginBottom: 20 }}>
-          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Açıklama (opsiyonel)</label>
+          <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Marka / Açıklama (opsiyonel)</label>
           <input type="text" value={form.aciklama} onChange={e => f('aciklama', e.target.value)}
-            placeholder="Ek not" style={inputStil} />
+            placeholder="örn: Gübre markası, ilaç adı..." style={inputStil} />
         </div>
 
         <button onClick={kaydet} style={{
