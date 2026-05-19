@@ -32,6 +32,7 @@ function yaz(key, veri) {
 // ─── Supabase sync ───────────────────────────────────────────
 
 async function bulutaYaz(key, veri) {
+  if (!supabase) return
   try {
     await supabase
       .from('store')
@@ -42,6 +43,7 @@ async function bulutaYaz(key, veri) {
 }
 
 async function buluttanOku(key) {
+  if (!supabase) return null
   try {
     const { data } = await supabase
       .from('store')

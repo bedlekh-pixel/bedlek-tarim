@@ -21,15 +21,17 @@ export default function App() {
 
   useEffect(() => {
     // Bağlantıyı test et, sonra senkronize et
-    supabase.from('store').select('key').limit(1)
-      .then(({ error }) => {
-        if (error) {
-          console.error('Supabase bağlantı hatası:', error)
-          setSyncHata(error.message)
-        } else {
-          setSyncHata(null)
-        }
-      })
+    if (supabase) {
+      supabase.from('store').select('key').limit(1)
+        .then(({ error }) => {
+          if (error) {
+            console.error('Supabase bağlantı hatası:', error)
+            setSyncHata(error.message)
+          } else {
+            setSyncHata(null)
+          }
+        })
+    }
 
     dbSyncFromCloud()
       .then(() => {
