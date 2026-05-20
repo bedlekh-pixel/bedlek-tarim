@@ -15,7 +15,7 @@
     --zemin: #F5F3EE;
     --kart: #FFFFFF;
     --yazi: #1A1A1A;
-    --yazi-hafif: #6B7280;
+    --yazi-hafif: #505869;
     --kenar: #E5E1D8;
     --p: 16px;
   }
@@ -56,6 +56,23 @@
   }
 
   h1, h2, h3 { margin: 0; }
+
+  /* Keyboard navigation için focus ring */
+  *:focus-visible {
+    outline: 3px solid var(--yesil);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Outdoor kullanım: minimum dokunma hedefi */
+  button, select, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+  }
+
+  /* Outdoor kullanım: 11px altı yazı yasak */
+  small, .small-text {
+    font-size: 12px !important;
+  }
 }
 
 /* Sayfa içi responsive padding */

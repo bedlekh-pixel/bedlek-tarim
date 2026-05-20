@@ -34,13 +34,14 @@ export default function Sidebar({ aktifSayfa, setSayfa }) {
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: '12px 0', flex: 1 }}>
+      <nav role="navigation" aria-label="Ana Menü" style={{ padding: '12px 0', flex: 1 }}>
         {navItems.map(item => {
           const aktif = aktifSayfa === item.id
           return (
             <button
               key={item.id}
               onClick={() => setSayfa(item.id)}
+              aria-current={aktif ? 'page' : undefined}
               style={{
                 width: '100%',
                 display: 'flex',

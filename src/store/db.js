@@ -12,6 +12,7 @@ const KEYS = {
   ayarlar: 'bt_ayarlar',
   isci_gruplari: 'bt_isci_gruplari',
   iscilik_kayitlari: 'bt_iscilik_kayitlari',
+  urunler: 'bt_urunler',
 }
 
 // ─── localStorage ────────────────────────────────────────────
@@ -82,6 +83,16 @@ const VARSAYILAN_SEZON = {
 
 // ─── Init ────────────────────────────────────────────────────
 
+const VARSAYILAN_URUNLER = [
+  'Buğday', 'Arpa', 'Çavdar', 'Yulaf',
+  'Mısır', 'Patlatmalık Mısır', 'Silajlık Mısır',
+  'Pamuk', 'Ayçiçeği', 'Susam', 'Kolza',
+  'Patates', 'Domates', 'Biber', 'Patlıcan',
+  'Soğan', 'Sarımsak', 'Havuç', 'Şeker Pancarı',
+  'Karpuz', 'Kavun', 'Salatalık',
+  'Mercimek', 'Nohut', 'Fasulye', 'Soya',
+]
+
 export function dbInit() {
   if (!oku(KEYS.kalemler)) yaz(KEYS.kalemler, VARSAYILAN_KALEMLER)
   if (!oku(KEYS.firmalar)) yaz(KEYS.firmalar, [])
@@ -92,6 +103,7 @@ export function dbInit() {
   if (!oku(KEYS.ayarlar)) yaz(KEYS.ayarlar, { aktifSezon: VARSAYILAN_SEZON.id })
   if (!oku(KEYS.isci_gruplari)) yaz(KEYS.isci_gruplari, [])
   if (!oku(KEYS.iscilik_kayitlari)) yaz(KEYS.iscilik_kayitlari, [])
+  if (!oku(KEYS.urunler)) yaz(KEYS.urunler, VARSAYILAN_URUNLER)
 
   // Yeni kalemler varsa mevcut listeye ekle
   const mevcutKalemler = oku(KEYS.kalemler) || []
@@ -207,6 +219,24 @@ export function sezonSil(id) {
   bulutaYaz(KEYS.sezonlar, liste)
 }
 
+// Sezon kilitli mi kontrol et
+export function sezonKilitliMi(sezonId) {
+  const sezonlar = oku(KEYS.sezonlar) || []
+  const sezon = sezonlar.find(s => s.id === sezonId)
+  return sezon?.kilitli === true
+}
+
+// Sezon kilitle/aç
+export function sezonKilidiniToggle(sezonId) {
+  const sezonlar = oku(KEYS.sezonlar) || []
+  const guncellenmis = sezonlar.map(s =>
+    s.id === sezonId ? { ...s, kilitli: !s.kilitli } : s
+  )
+  yaz(KEYS.sezonlar, guncellenmis)
+  bulutaYaz(KEYS.sezonlar, guncellenmis)
+  return guncellenmis.find(s => s.id === sezonId)?.kilitli
+}
+
 // ─── Firmalar ────────────────────────────────────────────────
 
 export function firmalariOku() {
@@ -270,6 +300,10 @@ export function hareketleriOku(sezonId) {
 }
 
 export function hareketEkle(hareket) {
+  if (sezonKilitliMi(hareket.sezon)) {
+    console.warn('Bu sezon kilitli, hareket eklenemez')
+    return null
+  }
   const liste = oku(KEYS.hareketler) || []
   const yeni = {
     ...hareket,
@@ -283,6 +317,11 @@ export function hareketEkle(hareket) {
 }
 
 export function hareketDuzenle(id, degisiklikler) {
+  const mevcutHareket = (oku(KEYS.hareketler) || []).find(h => h.id === id)
+  if (mevcutHareket && sezonKilitliMi(mevcutHareket.sezon)) {
+    console.warn('Bu sezon kilitli, hareket düzenlenemez')
+    return null
+  }
   const liste = (oku(KEYS.hareketler) || []).map(h =>
     h.id === id ? { ...h, ...degisiklikler } : h
   )
@@ -291,6 +330,11 @@ export function hareketDuzenle(id, degisiklikler) {
 }
 
 export function hareketSil(id) {
+  const mevcutHareket = (oku(KEYS.hareketler) || []).find(h => h.id === id)
+  if (mevcutHareket && sezonKilitliMi(mevcutHareket.sezon)) {
+    console.warn('Bu sezon kilitli, hareket silinemez')
+    return null
+  }
   const liste = (oku(KEYS.hareketler) || []).filter(h => h.id !== id)
   yaz(KEYS.hareketler, liste)
   bulutaYaz(KEYS.hareketler, liste)
@@ -321,6 +365,22 @@ export function kisiSil(id) {
   const liste = kisileriOku().filter(k => k.id !== id)
   yaz(KEYS.kisiler, liste)
   bulutaYaz(KEYS.kisiler, liste)
+}
+
+// ─── Ürünler ─────────────────────────────────────────────────
+
+export function urunleriOku() {
+  return oku(KEYS.urunler) || VARSAYILAN_URUNLER
+}
+
+export function urunKaydet(ad) {
+  const temiz = ad.trim()
+  if (!temiz) return
+  const liste = urunleriOku()
+  // Aynı isim (büyük/küçük harf fark etmez) zaten varsa ekleme
+  if (liste.some(u => u.toLowerCase() === temiz.toLowerCase())) return
+  const yeni = [temiz, ...liste]
+  yaz(KEYS.urunler, yeni)
 }
 
 // ─── Kalemler ────────────────────────────────────────────────

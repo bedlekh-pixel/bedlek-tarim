@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { hareketleriOku, hareketEkle, hareketSil, hareketDuzenle, tarlalariOku, kalemleriOku, tarlaEkle, kisileriOku } from '../../store/db'
+import { hareketleriOku, hareketEkle, hareketSil, hareketDuzenle, tarlalariOku, kalemleriOku, tarlaEkle, kisileriOku, sezonKilitliMi } from '../../store/db'
 import { paraBiçim, tarihBiçim, bugun } from '../../utils/format'
 import Modal from '../../utils/Modal'
 import Onayla from '../../utils/Onayla'
@@ -388,11 +388,22 @@ export default function SahsiSayfasi({ sezon }) {
   const [duzenlenen, setDuzenlenen] = useState(null)
   const [silinecek, setSilinecek] = useState(null)
   const [tick, setTick] = useState(0)
+  const [filtreTur, setFiltreTur] = useState('tumu')
+  const [filtreArama, setFiltreArama] = useState('')
   const tarlalar = tarlalariOku()
   const kalemler = kalemleriOku()
 
-  const hareketler = hareketleriOku(sezon?.id).filter(h => h.modul === 'sahsi')
-  const toplamGider = hareketler.reduce((t, h) => t + (h.tutar || 0), 0)
+  const tumHareketler = hareketleriOku(sezon?.id).filter(h => h.modul === 'sahsi')
+  const toplamGider = tumHareketler.reduce((t, h) => t + (h.tutar || 0), 0)
+
+  const hareketler = tumHareketler
+    .filter(h => filtreTur === 'tumu' ||
+      (filtreTur === 'gelir' && h.yon === 'gelir') ||
+      (filtreTur === 'gider' && h.yon === 'gider') ||
+      (filtreTur === 'iscilik' && h.kalem === 'İşçilik'))
+    .filter(h => !filtreArama ||
+      h.kalem?.toLowerCase().includes(filtreArama.toLowerCase()) ||
+      h.aciklama?.toLowerCase().includes(filtreArama.toLowerCase()))
 
   const tarlaGruplari = {}
   hareketler.forEach(h => {
@@ -436,10 +447,47 @@ export default function SahsiSayfasi({ sezon }) {
               <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11 }}>Şahsi Toplam Gider</div>
               <div style={{ color: '#fff', fontSize: 22, fontWeight: 800 }}>{paraBiçim(toplamGider)}</div>
             </div>
-            <button onClick={() => { setDuzenlenen(null); setFormAcik(true) }} style={{
+            <button onClick={() => {
+              if (sezonKilitliMi(sezon?.id)) {
+                alert('Bu sezon kilitlidir. Yeni hareket eklenemez.')
+                return
+              }
+              setDuzenlenen(null)
+              setFormAcik(true)
+            }} style={{
               background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
               color: '#fff', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 700,
             }}>+ Harcama Ekle</button>
+          </div>
+
+          {/* Filtre Bar */}
+          <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Kalem, açıklama ara..."
+              value={filtreArama}
+              onChange={e => setFiltreArama(e.target.value)}
+              style={{
+                width: '100%', padding: '8px 12px', border: '1.5px solid var(--kenar)',
+                borderRadius: 8, fontSize: 13, background: '#fff', outline: 'none',
+              }}
+            />
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {[
+                { id: 'tumu', label: 'Tümü' },
+                { id: 'gider', label: 'Gider' },
+                { id: 'gelir', label: 'Gelir' },
+                { id: 'iscilik', label: 'İşçilik' },
+              ].map(btn => (
+                <button key={btn.id} onClick={() => setFiltreTur(btn.id)} style={{
+                  borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                  cursor: 'pointer', border: '1.5px solid var(--kenar)',
+                  background: filtreTur === btn.id ? 'var(--yesil)' : '#fff',
+                  color: filtreTur === btn.id ? '#fff' : 'var(--yazi)',
+                  borderColor: filtreTur === btn.id ? 'var(--yesil)' : 'var(--kenar)',
+                }}>{btn.label}</button>
+              ))}
+            </div>
           </div>
 
           {Object.entries(tarlaGruplari).length === 0 ? (

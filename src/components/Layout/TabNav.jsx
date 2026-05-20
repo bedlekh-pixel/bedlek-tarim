@@ -11,6 +11,8 @@ export default function TabNav({ aktifSayfa, setSayfa }) {
 
   return (
     <nav
+      role="tablist"
+      aria-label="Ana Navigasyon"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -27,7 +29,10 @@ export default function TabNav({ aktifSayfa, setSayfa }) {
       {tabs.map(tab => (
         <button
           key={tab.id}
+          role="tab"
           onClick={() => setSayfa(tab.id)}
+          aria-selected={aktifSayfa === tab.id}
+          aria-label={tab.label}
           style={{
             flex: 1,
             display: 'flex',
@@ -40,7 +45,7 @@ export default function TabNav({ aktifSayfa, setSayfa }) {
             border: 'none',
             cursor: 'pointer',
             color: aktifSayfa === tab.id ? 'var(--yesil)' : 'var(--yazi-hafif)',
-            fontSize: 10,
+            fontSize: 12,
             fontWeight: aktifSayfa === tab.id ? 700 : 400,
             transition: 'color 0.15s',
             minWidth: 0,

@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import {
   firmalariOku, firmaEkle, firmaDuzenle, firmaSil,
   hareketleriOku, hareketEkle, hareketDuzenle, hareketSil,
-  tarlalariOku, kalemleriOku, kisileriOku, firmaOzeti
+  tarlalariOku, kalemleriOku, kisileriOku, firmaOzeti,
+  sezonKilitliMi
 } from '../../store/db'
 import Modal from '../../utils/Modal'
 import Onayla from '../../utils/Onayla'
@@ -629,6 +630,8 @@ export default function SozlesmeliSayfasi({ sezon }) {
   const [yeniFirmaAd, setYeniFirmaAd] = useState('')
   const [yeniFirmaUrun, setYeniFirmaUrun] = useState('')
   const [tick, setTick] = useState(0)
+  const [filtreTur, setFiltreTur] = useState('tumu')
+  const [filtreArama, setFiltreArama] = useState('')
   const tarlalar = tarlalariOku()
   const kalemler = kalemleriOku()
 
@@ -679,9 +682,18 @@ export default function SozlesmeliSayfasi({ sezon }) {
     setDuzenlenenHareket(null)
   }
 
-  const hareketler = seciliFirma
+  const tumHareketler = seciliFirma
     ? hareketleriOku(sezon?.id).filter(h => h.firma_id === seciliFirma.id)
     : []
+
+  const hareketler = tumHareketler
+    .filter(h => filtreTur === 'tumu' ||
+      (filtreTur === 'gelir' && h.yon === 'gelir') ||
+      (filtreTur === 'gider' && h.yon === 'gider') ||
+      (filtreTur === 'hammadde' && h.tur === 'hammadde'))
+    .filter(h => !filtreArama ||
+      h.kalem?.toLowerCase().includes(filtreArama.toLowerCase()) ||
+      h.aciklama?.toLowerCase().includes(filtreArama.toLowerCase()))
 
   return (
     <div className="sayfa">
@@ -744,11 +756,49 @@ export default function SozlesmeliSayfasi({ sezon }) {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ fontWeight: 700, fontSize: 14 }}>Hareketler</div>
-              <button onClick={() => { setDuzenlenenHareket(null); setFormAcik(true) }} style={{
+              <button onClick={() => {
+                if (sezonKilitliMi(sezon?.id)) {
+                  alert('Bu sezon kilitlidir. Yeni hareket eklenemez.')
+                  return
+                }
+                setDuzenlenenHareket(null)
+                setFormAcik(true)
+              }} style={{
                 background: 'var(--yesil)', color: '#fff', border: 'none',
                 borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
               }}>+ Ekle</button>
             </div>
+
+            {/* Filtre Bar */}
+            <div style={{ marginBottom: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <input
+                type="text"
+                placeholder="Kalem, açıklama ara..."
+                value={filtreArama}
+                onChange={e => setFiltreArama(e.target.value)}
+                style={{
+                  width: '100%', padding: '8px 12px', border: '1.5px solid var(--kenar)',
+                  borderRadius: 8, fontSize: 13, background: '#fff', outline: 'none',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {[
+                  { id: 'tumu', label: 'Tümü' },
+                  { id: 'gider', label: 'Gider' },
+                  { id: 'gelir', label: 'Gelir' },
+                  { id: 'hammadde', label: 'Hammadde' },
+                ].map(btn => (
+                  <button key={btn.id} onClick={() => setFiltreTur(btn.id)} style={{
+                    borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', border: '1.5px solid var(--kenar)',
+                    background: filtreTur === btn.id ? 'var(--yesil)' : '#fff',
+                    color: filtreTur === btn.id ? '#fff' : 'var(--yazi)',
+                    borderColor: filtreTur === btn.id ? 'var(--yesil)' : 'var(--kenar)',
+                  }}>{btn.label}</button>
+                ))}
+              </div>
+            </div>
+
             <HareketListesi
               hareketler={hareketler}
               tarlalar={tarlalar}
