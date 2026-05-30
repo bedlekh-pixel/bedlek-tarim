@@ -42,8 +42,255 @@ function Bolum({ baslik, toplam, children }) {
   )
 }
 
+// ─── Global Arama Sonuçları ───────────────────────────────────
+function AramaSonuclari({ aranan, hareketler, firmalar, tarlalar, kisiler }) {
+  const q = aranan.trim().toLowerCase()
+
+  const sonuclar = hareketler.filter(h => {
+    const firma = firmalar.find(f => f.id === h.firma_id)
+    const tarla = tarlalar.find(t => t.id === h.tarla_id)
+    const kisi  = kisiler.find(k => k.id === h.kisi_id)
+    return (
+      h.kalem?.toLowerCase().includes(q) ||
+      h.aciklama?.toLowerCase().includes(q) ||
+      firma?.ad?.toLowerCase().includes(q) ||
+      tarla?.ad?.toLowerCase().includes(q) ||
+      kisi?.ad?.toLowerCase().includes(q) ||
+      h.fis_no?.toLowerCase().includes(q)
+    )
+  }).sort((a, b) => new Date(b.tarih) - new Date(a.tarih))
+
+  const MODUL_ETIKET = {
+    sozlesmeli: { label: 'Sözleşmeli', renk: '#185FA5', bg: '#EFF6FF' },
+    sahsi:      { label: 'Şahsi',      renk: '#7C3AED', bg: '#F5F3FF' },
+    sanayi:     { label: 'Sanayi',     renk: '#374151', bg: '#F3F4F6' },
+    kisiler:    { label: 'Kişiler',    renk: '#0F6E56', bg: '#F0FDF4' },
+  }
+
+  if (sonuclar.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--yazi-hafif)' }}>
+        <div style={{ fontSize: 36, marginBottom: 10 }}>🔍</div>
+        <div style={{ fontWeight: 600 }}>"{aranan}" için sonuç bulunamadı</div>
+        <div style={{ fontSize: 12, marginTop: 6 }}>Kalem adı, açıklama, firma, tarla veya kişi adıyla arayın</div>
+      </div>
+    )
+  }
+
+  const toplamGelir = sonuclar.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
+  const toplamGider = sonuclar.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+
+  return (
+    <div>
+      {/* Özet satır */}
+      <div style={{
+        background: '#fff', borderRadius: 10, padding: '10px 14px', marginBottom: 12,
+        display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', fontSize: 13,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      }}>
+        <span style={{ fontWeight: 700, color: 'var(--yazi)' }}>{sonuclar.length} sonuç</span>
+        {toplamGelir > 0 && <span>Gelir: <strong style={{ color: 'var(--yesil)' }}>{paraBiçim(toplamGelir)}</strong></span>}
+        {toplamGider > 0 && <span>Gider: <strong style={{ color: 'var(--kirmizi)' }}>{paraBiçim(toplamGider)}</strong></span>}
+      </div>
+
+      {/* Sonuç listesi */}
+      <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+        {sonuclar.map((h, i) => {
+          const firma = firmalar.find(f => f.id === h.firma_id)
+          const tarla = tarlalar.find(t => t.id === h.tarla_id)
+          const kisi  = kisiler.find(k => k.id === h.kisi_id)
+          const etiket = MODUL_ETIKET[h.modul] || null
+          const altBilgi = [firma?.ad, tarla?.ad, kisi?.ad, h.aciklama].filter(Boolean).join(' · ')
+          const gelir = h.yon === 'gelir'
+
+          return (
+            <div key={h.id} style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+              padding: '12px 16px',
+              borderBottom: i < sonuclar.length - 1 ? '1px solid var(--kenar)' : 'none',
+            }}>
+              <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 3 }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--yazi)' }}>
+                    {h.kalem || h.tur}
+                  </span>
+                  {etiket && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4,
+                      background: etiket.bg, color: etiket.renk,
+                    }}>{etiket.label}</span>
+                  )}
+                  {h.fis_no && (
+                    <span style={{ fontSize: 10, color: 'var(--yazi-hafif)', background: '#F3F4F6', padding: '1px 5px', borderRadius: 3 }}>
+                      #{h.fis_no}
+                    </span>
+                  )}
+                </div>
+                {altBilgi && (
+                  <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {altBilgi}
+                  </div>
+                )}
+                <div style={{ fontSize: 11, color: 'var(--yazi-hafif)', marginTop: 2 }}>
+                  {tarihBiçim(h.tarih)}
+                  {h.miktar ? ` · ${h.miktar} ${h.birim}` : ''}
+                </div>
+              </div>
+              <div style={{ fontSize: 15, fontWeight: 800, flexShrink: 0, color: gelir ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                {gelir ? '+' : '-'}{h.tutar ? paraBiçim(h.tutar) : `${h.miktar || ''} ${h.birim || ''}`}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ─── Firma Detay Tab ──────────────────────────────────────────
+const TUR_ETIKET = {
+  nakit_avans:  { label: 'Nakit Avans',  bg: '#DCFCE7', renk: '#16A34A' },
+  hammadde:     { label: 'Hammadde',     bg: '#DBEAFE', renk: '#1D4ED8' },
+  harcama:      { label: 'Harcama',      bg: '#FEE2E2', renk: '#DC2626' },
+}
+
+function FirmaDetayTab({ firmaOzetleri, hareketler, tarlalar, onExport }) {
+  const [acikFirmalar, setAcikFirmalar] = useState({})
+
+  function toggle(id) {
+    setAcikFirmalar(prev => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  if (firmaOzetleri.length === 0) {
+    return <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydı yok</div>
+  }
+
+  return (
+    <div>
+      {firmaOzetleri.map(f => {
+        const acik = !!acikFirmalar[f.id]
+        const firmaHareketler = hareketler
+          .filter(h => h.firma_id === f.id)
+          .sort((a, b) => new Date(b.tarih) - new Date(a.tarih))
+
+        return (
+          <div key={f.id} style={{ background: '#fff', borderRadius: 12, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+            {/* Özet başlık */}
+            <div style={{ padding: '14px 16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div style={{ fontWeight: 800, fontSize: 15 }}>🏢 {f.ad}</div>
+                <div style={{
+                  background: f.kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)',
+                  color: '#fff', borderRadius: 8, padding: '4px 10px',
+                  fontSize: 13, fontWeight: 700,
+                }}>
+                  Kalan: {paraBiçim(f.kalan)}
+                </div>
+              </div>
+
+              {/* 3 özet metrik yan yana */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                <div style={{ flex: 1, background: '#F0FDF4', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 10, color: 'var(--yesil)', fontWeight: 700, marginBottom: 2 }}>GELEN NAKİT</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--yesil)' }}>{paraBiçim(f.gelenNakit)}</div>
+                </div>
+                <div style={{ flex: 1, background: '#FEF2F2', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 10, color: 'var(--kirmizi)', fontWeight: 700, marginBottom: 2 }}>HARCANAN</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--kirmizi)' }}>{paraBiçim(f.harcanan)}</div>
+                </div>
+                <div style={{ flex: 1, background: '#F8F9FA', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ fontSize: 10, color: 'var(--yazi-hafif)', fontWeight: 700, marginBottom: 2 }}>İŞLEM</div>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--yazi)' }}>{firmaHareketler.length}</div>
+                </div>
+              </div>
+
+              {/* Detay aç/kapat butonu */}
+              {firmaHareketler.length > 0 && (
+                <button onClick={() => toggle(f.id)} style={{
+                  width: '100%', padding: '8px', background: acik ? 'var(--yesil-acik)' : 'var(--zemin)',
+                  border: '1.5px solid', borderColor: acik ? 'var(--yesil)' : 'var(--kenar)',
+                  borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                  color: acik ? 'var(--yesil)' : 'var(--yazi-hafif)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}>
+                  {acik ? '▲ Detayları Gizle' : `▼ ${firmaHareketler.length} İşlemi Göster`}
+                </button>
+              )}
+            </div>
+
+            {/* Hareket listesi */}
+            {acik && firmaHareketler.length > 0 && (
+              <div style={{ borderTop: '1px solid var(--kenar)' }}>
+                {/* Kalem bazlı mini özet */}
+                {(() => {
+                  const kalemToplam = {}
+                  firmaHareketler.filter(h => h.yon === 'gider' && h.tutar > 0).forEach(h => {
+                    kalemToplam[h.kalem || 'Diğer'] = (kalemToplam[h.kalem || 'Diğer'] || 0) + (h.tutar || 0)
+                  })
+                  const kalemler = Object.entries(kalemToplam).sort((a, b) => b[1] - a[1])
+                  if (kalemler.length < 2) return null
+                  return (
+                    <div style={{ padding: '10px 16px', background: '#FAFAFA', display: 'flex', gap: 8, flexWrap: 'wrap', borderBottom: '1px solid var(--kenar)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--yazi-hafif)', fontWeight: 700, marginRight: 4 }}>KALEM ÖZETİ</span>
+                      {kalemler.map(([k, t]) => (
+                        <span key={k} style={{ fontSize: 11, background: '#fff', border: '1px solid var(--kenar)', borderRadius: 5, padding: '2px 7px', fontWeight: 600 }}>
+                          {k} <span style={{ color: 'var(--kirmizi)' }}>{paraBiçim(t)}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )
+                })()}
+
+                {/* Hareket satırları */}
+                {firmaHareketler.map((h, i) => {
+                  const tarla = tarlalar.find(t => t.id === h.tarla_id)
+                  const etiket = TUR_ETIKET[h.tur] || { label: h.tur, bg: '#F3F4F6', renk: '#374151' }
+                  const gelir = h.yon === 'gelir'
+                  return (
+                    <div key={h.id} style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                      padding: '10px 16px',
+                      borderBottom: i < firmaHareketler.length - 1 ? '1px solid var(--kenar)' : 'none',
+                      background: i % 2 === 0 ? '#fff' : '#FAFAFA',
+                    }}>
+                      <div style={{ flex: 1, minWidth: 0, marginRight: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 3 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{h.kalem || h.tur}</span>
+                          <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: etiket.bg, color: etiket.renk }}>
+                            {etiket.label}
+                          </span>
+                          {h.kaynak === 'cep' && (
+                            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#F5F3FF', color: '#7C3AED' }}>şahsi</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>
+                          {tarihBiçim(h.tarih)}
+                          {tarla ? ` · ${tarla.ad}` : ''}
+                          {h.miktar ? ` · ${h.miktar} ${h.birim}` : ''}
+                          {h.aciklama ? ` · ${h.aciklama}` : ''}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 14, fontWeight: 800, flexShrink: 0, color: gelir ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                        {gelir ? '+' : '-'}{h.tutar ? paraBiçim(h.tutar) : `${h.miktar || ''} ${h.birim || ''}`}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )
+      })}
+      <div style={{ marginTop: 4 }}>
+        <ExportBtn label="Firmalar Excel" onClick={onExport} />
+      </div>
+    </div>
+  )
+}
+
 export default function RaporlarSayfasi({ sezon }) {
   const [aktifTab, setAktifTab] = useState('sezon')
+  const [aramaMetni, setAramaMetni] = useState('')
   const hareketler = hareketleriOku(sezon?.id)
   const firmalar = firmalariOku()
   const tarlalar = tarlalariOku()
@@ -129,6 +376,52 @@ export default function RaporlarSayfasi({ sezon }) {
   return (
     <div className="sayfa">
 
+      {/* ── Global Arama ── */}
+      <div style={{ position: 'relative', marginBottom: 14 }}>
+        <span style={{
+          position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)',
+          fontSize: 16, pointerEvents: 'none',
+        }}>🔍</span>
+        <input
+          type="text"
+          value={aramaMetni}
+          onChange={e => setAramaMetni(e.target.value)}
+          placeholder="Tüm kayıtlarda ara: kalem, firma, tarla, açıklama..."
+          style={{
+            width: '100%', padding: '12px 40px 12px 40px',
+            border: aramaMetni ? '2px solid var(--yesil)' : '1.5px solid var(--kenar)',
+            borderRadius: 12, fontSize: 14, background: '#fff',
+            outline: 'none', boxSizing: 'border-box',
+            boxShadow: aramaMetni ? '0 0 0 3px rgba(15,110,86,0.1)' : 'none',
+            transition: 'border 0.15s, box-shadow 0.15s',
+          }}
+        />
+        {aramaMetni && (
+          <button
+            onClick={() => setAramaMetni('')}
+            style={{
+              position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+              background: 'var(--kenar)', border: 'none', borderRadius: '50%',
+              width: 22, height: 22, cursor: 'pointer', fontSize: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'var(--yazi-hafif)', fontWeight: 700,
+            }}
+          >×</button>
+        )}
+      </div>
+
+      {/* Arama aktifken — sonuçları göster, diğer içeriği gizle */}
+      {aramaMetni.trim() ? (
+        <AramaSonuclari
+          aranan={aramaMetni}
+          hareketler={hareketler}
+          firmalar={firmalar}
+          tarlalar={tarlalar}
+          kisiler={kisiler}
+        />
+      ) : (
+      <>
+
       {/* Tam Rapor */}
       <button onClick={() => tamRaporExport(sezon, hareketler, firmalar, tarlalar, kisiler)} style={{
         width: '100%', marginBottom: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -176,30 +469,12 @@ export default function RaporlarSayfasi({ sezon }) {
 
       {/* Firma */}
       {aktifTab === 'firma' && (
-        <div>
-          {firmaOzetleri.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '30px 0', color: 'var(--yazi-hafif)' }}>Firma kaydı yok</div>
-          ) : (
-            <>
-              {firmaOzetleri.map(f => (
-                <div key={f.id} style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 10, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-                  <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 12 }}>🏢 {f.ad}</div>
-                  {[
-                    { label: 'Gelen Nakit', tutar: f.gelenNakit, renk: 'var(--yesil)' },
-                    { label: 'Harcanan', tutar: f.harcanan, renk: 'var(--kirmizi)' },
-                    { label: 'Kalan Bakiye', tutar: f.kalan, renk: f.kalan >= 0 ? 'var(--yesil)' : 'var(--kirmizi)' },
-                  ].map(r => (
-                    <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBlock: 8, borderBottom: '1px solid var(--kenar)', fontSize: 13 }}>
-                      <span>{r.label}</span>
-                      <span style={{ fontWeight: 700, color: r.renk }}>{paraBiçim(r.tutar)}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-              <ExportBtn label="Firmalar Excel" onClick={() => firmalarExcelExport(firmalar, hareketler, sezonAd)} />
-            </>
-          )}
-        </div>
+        <FirmaDetayTab
+          firmaOzetleri={firmaOzetleri}
+          hareketler={hareketler}
+          tarlalar={tarlalar}
+          onExport={() => firmalarExcelExport(firmalar, hareketler, sezonAd)}
+        />
       )}
 
       {/* Tarla */}
@@ -643,6 +918,9 @@ export default function RaporlarSayfasi({ sezon }) {
           )}
         </div>
       )}
+
+      </> /* arama boşken gösterilen içerik kapanışı */
+      )} {/* aramaMetni ternary kapanışı */}
     </div>
   )
 }

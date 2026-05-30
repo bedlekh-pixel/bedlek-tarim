@@ -33,6 +33,51 @@ function BakiyeKarti({ firma, sezon }) {
   )
 }
 
+// ─── Kalem Özeti ─────────────────────────────────────────────
+function KalemOzeti({ hareketler }) {
+  const kalemler = {}
+  hareketler
+    .filter(h => h.kalem && h.kalem !== 'Nakit Avans')
+    .forEach(h => {
+      if (!kalemler[h.kalem]) kalemler[h.kalem] = { miktar: 0, birim: '', tutar: 0, firmadan: false }
+      if (h.miktar) kalemler[h.kalem].miktar += h.miktar
+      if (h.birim) kalemler[h.kalem].birim = h.birim
+      if (h.tutar && h.yon === 'gider') kalemler[h.kalem].tutar += h.tutar
+      if (h.kaynak === 'firma') kalemler[h.kalem].firmadan = true
+    })
+
+  const liste = Object.entries(kalemler)
+  if (liste.length === 0) return null
+
+  return (
+    <div style={{ background: '#fff', borderRadius: 12, padding: 16, marginBottom: 8, boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
+      <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 10 }}>📦 Kalem Özeti</div>
+      {liste.sort((a, b) => b[1].tutar - a[1].tutar).map(([kalem, v]) => (
+        <div key={kalem} style={{
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          paddingBlock: 8, borderBottom: '1px solid var(--kenar)',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600 }}>{kalem}</span>
+          <div style={{ textAlign: 'right' }}>
+            {v.miktar > 0 && (
+              <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>
+                {v.miktar.toLocaleString('tr-TR')} {v.birim}
+              </div>
+            )}
+            {v.tutar > 0 ? (
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--kirmizi)' }}>
+                {paraBiçim(v.tutar)}
+              </div>
+            ) : v.firmadan ? (
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--mavi)' }}>Firmadan</div>
+            ) : null}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Adım Adım Form (Yeni Ekleme + Düzenleme) ────────────────
 function Etiket({ bg, renk, children }) {
   return (
@@ -750,6 +795,7 @@ export default function SozlesmeliSayfasi({ sezon }) {
       {seciliFirma && (
         <>
           <BakiyeKarti firma={seciliFirma} sezon={sezon} />
+          <KalemOzeti hareketler={tumHareketler} />
           <div style={{
             background: '#fff', borderRadius: 12, padding: 16,
             boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 8,

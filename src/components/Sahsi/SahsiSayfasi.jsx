@@ -65,6 +65,97 @@ function TarlaSecici({ tarlalar: baseTarlalar, secili, onSec, inputStil }) {
   )
 }
 
+// ─── Şahsi Gelir Formu ───────────────────────────────────────
+const GELIR_KALEMLERI = [
+  { id: 'urun_satisi', ad: 'Ürün Satışı', ikon: '🌾' },
+  { id: 'subvansiyon', ad: 'Sübvansiyon', ikon: '💶' },
+  { id: 'kira_geliri', ad: 'Tarla Kirası', ikon: '🏡' },
+  { id: 'hizmet', ad: 'Hizmet Geliri', ikon: '🔧' },
+  { id: 'diger', ad: 'Diğer', ikon: '📋' },
+]
+
+function GelirForm({ sezon, tarlalar, onKapat, onKaydet, duzenlenen }) {
+  const [form, setForm] = useState(duzenlenen ? {
+    tarih: duzenlenen.tarih || bugun(),
+    tarla_id: duzenlenen.tarla_id || '',
+    kalem: duzenlenen.kalem || '',
+    tutar: duzenlenen.tutar != null ? String(duzenlenen.tutar) : '',
+    aciklama: duzenlenen.aciklama || '',
+  } : { tarih: bugun(), tarla_id: '', kalem: '', tutar: '', aciklama: '' })
+  const [hata, setHata] = useState('')
+
+  function f(alan, deger) { setForm(p => ({ ...p, [alan]: deger })) }
+
+  function kaydet() {
+    if (!form.kalem.trim()) { setHata('Gelir türü seçin veya yazın'); return }
+    if (!form.tutar || parseFloat(form.tutar) <= 0) { setHata('Geçerli bir tutar girin'); return }
+    setHata('')
+    const veri = {
+      tarih: form.tarih, sezon: sezon?.id, modul: 'sahsi',
+      yon: 'gelir', tur: 'gelir', kaynak: 'sahsi',
+      kalem: form.kalem.trim(), tutar: parseFloat(form.tutar),
+      tarla_id: form.tarla_id || null, aciklama: form.aciklama,
+    }
+    if (duzenlenen) hareketDuzenle(duzenlenen.id, veri)
+    else hareketEkle(veri)
+    onKaydet()
+  }
+
+  const inp = { width: '100%', padding: '12px 14px', border: '1.5px solid var(--kenar)', borderRadius: 10, fontSize: 16, background: '#fff', outline: 'none' }
+
+  return (
+    <Modal onKapat={onKapat} genislik={480}>
+      <div>
+        <div style={{ position: 'sticky', top: 0, background: 'var(--zemin)', padding: '16px 16px 12px', borderBottom: '1px solid var(--kenar)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 16 }}>{duzenlenen ? '✏️ Gelir Düzenle' : '💚 Gelir Ekle'}</div>
+          <button onClick={onKapat} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: 'var(--yazi-hafif)' }}>×</button>
+        </div>
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 8 }}>Gelir Türü</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+              {GELIR_KALEMLERI.map(k => (
+                <button key={k.id} onClick={() => { f('kalem', k.ad); setHata('') }} style={{
+                  padding: '8px 12px', borderRadius: 8, border: '1.5px solid', cursor: 'pointer', fontSize: 13,
+                  fontWeight: form.kalem === k.ad ? 700 : 400,
+                  background: form.kalem === k.ad ? 'var(--yesil)' : '#fff',
+                  borderColor: form.kalem === k.ad ? 'var(--yesil)' : 'var(--kenar)',
+                  color: form.kalem === k.ad ? '#fff' : 'var(--yazi)',
+                }}>{k.ikon} {k.ad}</button>
+              ))}
+            </div>
+            <input type="text" value={form.kalem} onChange={e => { f('kalem', e.target.value); setHata('') }}
+              placeholder="veya buraya yaz: Arpa satışı..." style={{ ...inp, fontSize: 14 }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Tutar (TL)</label>
+            <input type="number" inputMode="decimal" value={form.tutar}
+              onChange={e => { f('tutar', e.target.value); setHata('') }}
+              placeholder="0" style={inp} />
+          </div>
+          <TarlaSecici tarlalar={tarlalariOku()} secili={form.tarla_id} onSec={id => f('tarla_id', id)} inputStil={inp} />
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Tarih</label>
+            <input type="date" value={form.tarih} onChange={e => f('tarih', e.target.value)} style={inp} />
+          </div>
+          <div>
+            <label style={{ fontSize: 13, fontWeight: 600, display: 'block', marginBottom: 6 }}>Açıklama (opsiyonel)</label>
+            <input type="text" value={form.aciklama} onChange={e => f('aciklama', e.target.value)} placeholder="Notlar..." style={inp} />
+          </div>
+          {hata && (
+            <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 10, padding: '10px 14px', color: '#DC2626', fontSize: 13, fontWeight: 600 }}>
+              ⚠️ {hata}
+            </div>
+          )}
+          <button onClick={kaydet} style={{ background: 'var(--yesil)', color: '#fff', border: 'none', borderRadius: 12, padding: '16px', fontSize: 16, fontWeight: 700, cursor: 'pointer' }}>
+            ✓ {duzenlenen ? 'Güncelle' : 'Kaydet'}
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 // ─── Şahsi Harcama Formu ─────────────────────────────────────
 function HarcamaForm({ sezon, tarlalar, kalemler, onKapat, onKaydet, duzenlenen }) {
   const tedarikciler = kisileriOku().filter(k => k.tur === 'tedarikci')
@@ -386,6 +477,8 @@ export default function SahsiSayfasi({ sezon }) {
   const [sekme, setSekme] = useState('harcama')
   const [formAcik, setFormAcik] = useState(false)
   const [duzenlenen, setDuzenlenen] = useState(null)
+  const [gelirFormAcik, setGelirFormAcik] = useState(false)
+  const [duzlenenGelir, setDuzlenenGelir] = useState(null)
   const [silinecek, setSilinecek] = useState(null)
   const [tick, setTick] = useState(0)
   const [filtreTur, setFiltreTur] = useState('tumu')
@@ -394,7 +487,8 @@ export default function SahsiSayfasi({ sezon }) {
   const kalemler = kalemleriOku()
 
   const tumHareketler = hareketleriOku(sezon?.id).filter(h => h.modul === 'sahsi')
-  const toplamGider = tumHareketler.reduce((t, h) => t + (h.tutar || 0), 0)
+  const toplamGider = tumHareketler.filter(h => h.yon === 'gider').reduce((t, h) => t + (h.tutar || 0), 0)
+  const toplamGelir = tumHareketler.filter(h => h.yon === 'gelir').reduce((t, h) => t + (h.tutar || 0), 0)
 
   const hareketler = tumHareketler
     .filter(h => filtreTur === 'tumu' ||
@@ -414,6 +508,7 @@ export default function SahsiSayfasi({ sezon }) {
 
   function yenile() { setTick(t => t + 1) }
   function formKapat() { setFormAcik(false); setDuzenlenen(null) }
+  function gelirFormKapat() { setGelirFormAcik(false); setDuzlenenGelir(null) }
 
   const SEKMELER = [
     { id: 'harcama', label: '💰 Şahsi' },
@@ -441,23 +536,35 @@ export default function SahsiSayfasi({ sezon }) {
         <>
           <div style={{
             background: 'var(--mor)', borderRadius: 12, padding: '14px 16px',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16,
+            marginBottom: 16,
           }}>
-            <div>
-              <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: 11 }}>Şahsi Toplam Gider</div>
-              <div style={{ color: '#fff', fontSize: 22, fontWeight: 800 }}>{paraBiçim(toplamGider)}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: toplamGelir > 0 ? 10 : 0 }}>
+              <div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>Gider / Gelir</div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'baseline', marginTop: 2 }}>
+                  <div style={{ color: '#FCA5A5', fontSize: 18, fontWeight: 800 }}>-{paraBiçim(toplamGider)}</div>
+                  {toplamGelir > 0 && (
+                    <div style={{ color: '#86EFAC', fontSize: 18, fontWeight: 800 }}>+{paraBiçim(toplamGelir)}</div>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button onClick={() => {
+                  if (sezonKilitliMi(sezon?.id)) { alert('Bu sezon kilitlidir.'); return }
+                  setDuzlenenGelir(null); setGelirFormAcik(true)
+                }} style={{
+                  background: 'var(--yesil)', border: 'none',
+                  color: '#fff', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+                }}>+ Gelir</button>
+                <button onClick={() => {
+                  if (sezonKilitliMi(sezon?.id)) { alert('Bu sezon kilitlidir.'); return }
+                  setDuzenlenen(null); setFormAcik(true)
+                }} style={{
+                  background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
+                  color: '#fff', borderRadius: 10, padding: '10px 14px', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+                }}>+ Harcama</button>
+              </div>
             </div>
-            <button onClick={() => {
-              if (sezonKilitliMi(sezon?.id)) {
-                alert('Bu sezon kilitlidir. Yeni hareket eklenemez.')
-                return
-              }
-              setDuzenlenen(null)
-              setFormAcik(true)
-            }} style={{
-              background: 'rgba(255,255,255,0.2)', border: '1.5px solid rgba(255,255,255,0.4)',
-              color: '#fff', borderRadius: 10, padding: '10px 16px', cursor: 'pointer', fontSize: 14, fontWeight: 700,
-            }}>+ Harcama Ekle</button>
           </div>
 
           {/* Filtre Bar */}
@@ -515,8 +622,13 @@ export default function SahsiSayfasi({ sezon }) {
                         {h.aciklama && <div style={{ fontSize: 11, color: 'var(--yazi-hafif)' }}>{h.aciklama}</div>}
                       </div>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--kirmizi)' }}>-{paraBiçim(h.tutar)}</div>
-                        <button onClick={() => { setDuzenlenen(h); setFormAcik(true) }} title="Düzenle" style={{
+                        <div style={{ fontSize: 14, fontWeight: 700, color: h.yon === 'gelir' ? 'var(--yesil)' : 'var(--kirmizi)' }}>
+                          {h.yon === 'gelir' ? '+' : '-'}{paraBiçim(h.tutar)}
+                        </div>
+                        <button onClick={() => {
+                          if (h.yon === 'gelir') { setDuzlenenGelir(h); setGelirFormAcik(true) }
+                          else { setDuzenlenen(h); setFormAcik(true) }
+                        }} title="Düzenle" style={{
                           background: 'none', border: '1px solid var(--kenar)', color: 'var(--yazi-hafif)',
                           cursor: 'pointer', fontSize: 12, padding: '2px 6px', borderRadius: 6,
                         }}>✏️</button>
@@ -534,6 +646,10 @@ export default function SahsiSayfasi({ sezon }) {
           {formAcik && (
             <HarcamaForm sezon={sezon} tarlalar={tarlalar} kalemler={kalemler}
               duzenlenen={duzenlenen} onKapat={formKapat} onKaydet={() => { formKapat(); yenile() }} />
+          )}
+          {gelirFormAcik && (
+            <GelirForm sezon={sezon} tarlalar={tarlalar}
+              duzenlenen={duzlenenGelir} onKapat={gelirFormKapat} onKaydet={() => { gelirFormKapat(); yenile() }} />
           )}
           {silinecek && (
             <Onayla
