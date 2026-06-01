@@ -29,6 +29,36 @@ export function sonYedekZamani() {
   return localStorage.getItem('bt_son_yedek')
 }
 
+export function haftalikYedekGerekliMi() {
+  const son = sonYedekZamani()
+  if (!son) return true
+  const fark = Date.now() - new Date(son).getTime()
+  return fark > 7 * 24 * 60 * 60 * 1000
+}
+
+export async function gdriveSessizYedekle() {
+  if (!CLIENT_ID || !window.google) return false
+  if (!tokenClient) gdriveBaslat()
+
+  try {
+    await new Promise((resolve, reject) => {
+      tokenClient.callback = (res) => {
+        if (res.error) { reject(new Error(res.error)); return }
+        accessToken = res.access_token
+        resolve()
+      }
+      tokenClient.requestAccessToken({ prompt: '' })
+    })
+    await dbSyncFromCloud()
+    const folderId = await klasorBulVeyaOlustur()
+    await yukleme(folderId)
+    localStorage.setItem('bt_son_yedek', new Date().toISOString())
+    return true
+  } catch {
+    return false
+  }
+}
+
 export async function gdriveYedekle() {
   if (!CLIENT_ID) throw new Error('Google Client ID tanımlı değil')
   if (!window.google) throw new Error('Google API yüklenemedi')

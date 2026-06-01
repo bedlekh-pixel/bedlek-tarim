@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { dbInit, dbSyncFromCloud, sezonlariOku, ayarlariOku } from './store/db'
 import { supabase } from './store/supabase'
+import { gdriveKurulu, haftalikYedekGerekliMi, gdriveSessizYedekle } from './store/gdrive'
 import Layout from './components/Layout/Layout'
 import OzetSayfasi from './components/Ozet/OzetSayfasi'
 import SozlesmeliSayfasi from './components/Sozlesmeli/SozlesmeliSayfasi'
@@ -18,6 +19,7 @@ export default function App() {
   const [hazir, setHazir] = useState(false)
   const [yenile, setYenile] = useState(0)
   const [syncHata, setSyncHata] = useState(null)
+  const [yedekHatirlatici, setYedekHatirlatici] = useState(false)
 
   useEffect(() => {
     // Bağlantıyı test et, sonra senkronize et
@@ -38,6 +40,15 @@ export default function App() {
         const aktifSezon = ayarlariOku().aktifSezon
         setSezonId(aktifSezon)
         setYenile(n => n + 1)
+
+        // Haftalık otomatik yedek kontrolü
+        if (gdriveKurulu() && haftalikYedekGerekliMi()) {
+          setTimeout(() => {
+            gdriveSessizYedekle().then(basarili => {
+              if (!basarili) setYedekHatirlatici(true)
+            })
+          }, 3000)
+        }
       })
       .finally(() => {
         setHazir(true)
@@ -64,6 +75,20 @@ export default function App() {
 
   return (
     <>
+      {yedekHatirlatici && (
+        <div style={{
+          background: '#FFF7ED', borderBottom: '1px solid #FED7AA',
+          padding: '8px 16px', fontSize: 12, color: '#C2410C',
+          textAlign: 'center', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', gap: 12,
+        }}>
+          ☁️ 7 günlük yedek zamanı geldi — sol menüden "Drive Yedek" butonuna bas.
+          <button onClick={() => setYedekHatirlatici(false)} style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            color: '#C2410C', fontSize: 14, fontWeight: 700,
+          }}>✕</button>
+        </div>
+      )}
       {syncHata && (
         <div style={{
           background: '#FEF2F2', borderBottom: '1px solid #FECACA',
