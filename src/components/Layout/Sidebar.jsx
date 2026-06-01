@@ -4,6 +4,7 @@ import { gdriveYedekle, gdriveKurulu, gdriveBaslat, sonYedekZamani } from '../..
 function YedekButonu() {
   const [durum, setDurum] = useState('bosta') // bosta | yukleniyor | tamam | hata
   const [sonYedek, setSonYedek] = useState(sonYedekZamani())
+  const [hataMesaji, setHataMesaji] = useState('')
 
   useEffect(() => {
     const t = setTimeout(() => gdriveBaslat(), 1500)
@@ -19,9 +20,11 @@ function YedekButonu() {
       setDurum('tamam')
       setSonYedek(sonYedekZamani())
       setTimeout(() => setDurum('bosta'), 3000)
-    } catch {
+    } catch (e) {
+      console.error('Drive yedek hatası:', e.message)
       setDurum('hata')
-      setTimeout(() => setDurum('bosta'), 3000)
+      setHataMesaji(e.message)
+      setTimeout(() => { setDurum('bosta'); setHataMesaji('') }, 5000)
     }
   }
 
@@ -46,7 +49,12 @@ function YedekButonu() {
       >
         {etiket}
       </button>
-      {sonYedek && (
+      {hataMesaji && (
+        <div style={{ fontSize: 10, color: '#FCA5A5', marginTop: 5, paddingLeft: 2 }}>
+          {hataMesaji}
+        </div>
+      )}
+      {!hataMesaji && sonYedek && (
         <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', marginTop: 5, paddingLeft: 2 }}>
           Son: {new Date(sonYedek).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
         </div>

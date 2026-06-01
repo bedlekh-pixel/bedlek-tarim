@@ -61,16 +61,18 @@ export async function gdriveSessizYedekle() {
 
 export async function gdriveYedekle() {
   if (!CLIENT_ID) throw new Error('Google Client ID tanımlı değil')
-  if (!window.google) throw new Error('Google API yüklenemedi')
+  if (!window.google) throw new Error('Google API yüklenemedi — sayfayı yenileyin')
   if (!tokenClient) gdriveBaslat()
 
   await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('Google girişi zaman aşımına uğradı — popup engellenmiş olabilir')), 60000)
     tokenClient.callback = (res) => {
+      clearTimeout(timeout)
       if (res.error) { reject(new Error(res.error)); return }
       accessToken = res.access_token
       resolve()
     }
-    tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'consent' })
+    tokenClient.requestAccessToken({ prompt: 'consent' })
   })
 
   await dbSyncFromCloud()
