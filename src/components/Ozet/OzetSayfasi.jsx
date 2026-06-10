@@ -654,7 +654,6 @@ export default function OzetSayfasi({ sezon, setSayfa }) {
           const firma = firmalar.find(f => f.id === h.firma_id)
           const alt = [tarla?.ad, firma?.ad, h.aciklama].filter(Boolean)[0] || ''
           const gelir = h.yon === 'gelir'
-          const gosterilenTutar = (h.miktar && h.birim_fiyat) ? h.miktar * h.birim_fiyat : h.tutar
           return (
             <div key={h.id} style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -675,7 +674,7 @@ export default function OzetSayfasi({ sezon, setSayfa }) {
                   fontSize: 14, fontWeight: 800,
                   color: gelir ? 'var(--yesil)' : 'var(--kirmizi)',
                 }}>
-                  {gelir ? '+' : '-'}{paraBiçim(gosterilenTutar)}
+                  {gelir ? '+' : '-'}{paraBiçim(h.tutar)}
                 </div>
                 <div style={{
                   fontSize: 10, color: 'var(--yazi-hafif)',
