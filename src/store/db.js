@@ -128,6 +128,30 @@ export async function dbSyncFromCloud() {
   })
 }
 
+// ─── Yedek alma / geri yükleme ─────────────────────────────────
+
+export const YEDEK_KEYLERI = Object.values(KEYS)
+
+// Tüm verileri tek bir nesne olarak döndürür (yedek dosyası içeriği)
+export function tumVeriyiOku() {
+  const veri = {}
+  YEDEK_KEYLERI.forEach(key => {
+    const val = oku(key)
+    if (val !== null) veri[key] = val
+  })
+  return veri
+}
+
+// Bir yedek nesnesini localStorage + Supabase'e geri yazar
+export async function tumVeriyiGeriYukle(veri) {
+  for (const key of YEDEK_KEYLERI) {
+    if (veri[key] !== undefined) {
+      yaz(key, veri[key])
+      await bulutaYaz(key, veri[key])
+    }
+  }
+}
+
 // ─── İşçi Grupları ───────────────────────────────────────────
 
 export function isciGruplariniOku() {
